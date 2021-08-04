@@ -1,0 +1,50 @@
+library uuu;
+
+uses
+  System.SysUtils,
+  Winapi.Windows,
+  Vcl.Forms,
+  System.Classes,
+  Unit2 in 'Unit2.pas' {Form2},
+  u_debug in 'u_debug.pas';
+
+type
+  Test = record
+    a: Integer;
+    b: Integer;
+  end;
+{$R *.res}
+
+function MyThreadFun(var Param: Test): Integer; stdcall;
+begin
+  if Form2 = nil then
+    Form2 := tform2.Create(nil);
+  form2.ShowModal;
+  Result := 0;
+end;
+
+procedure DLLEntryInit(fdwReason: DWord);
+var
+  Id: Dword;
+  P: test;
+begin
+  case (fdwReason) of
+    DLL_PROCESS_ATTACH:
+      begin
+        P.a := 5;
+        Createthread(nil, 0, @MyThreadFun, @P, 0, Id);
+      end;
+    DLL_PROCESS_DETACH:
+      ;
+    DLL_THREAD_ATTACH:
+      ;
+    DLL_THREAD_DETACH:
+      ;
+  end;
+end;
+
+begin
+  DllProc := @DLLEntryInit;
+  DLLEntryInit(DLL_PROCESS_ATTACH);
+end.
+

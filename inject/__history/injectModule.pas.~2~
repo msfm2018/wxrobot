@@ -1,0 +1,87 @@
+unit injectModule;
+
+interface
+  //取得好友列表
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, tlhelp32,
+  PsAPI, Vcl.StdCtrls, Vcl.ExtCtrls, u_debug, DDetours, Method2,
+  Generics.Collections, wxCore;
+
+var
+  HookAddress_all: dword = $5244a8;
+  callbase: pointer;  // call callbase
+  HookAddressBackUp: array[0..4] of Byte;
+  JumpBackAddress: dword;
+  str: string;
+  ddd: PChar;
+  mystr: string;
+  data_base: dword;
+
+implementation
+
+uses
+  Method1, Method3;
+
+procedure show_item_data();
+var
+  len: Cardinal;
+  p1: Nativeuint;
+  mygod: pchar;
+begin
+
+//    form2.ListBox1.Items.Insert(0, v.ToString);
+  len := PDWORD(data_base + 4 + 4 + 4)^;   // wxid_len
+//  len := PDWORD(v + 4 + 4 + 4)^;   // wxid_len
+//
+  p1 := data_base + 4 + 4;
+  mygod := PChar(Pointer((@p1)^)^);
+//  form2.ListBox1.Items.Insert(0, '--->wxid' + mygod);
+
+  p1 := data_base + $64;
+  var nickname := PChar(Pointer((@p1)^)^);
+
+  var sum_vv := nickname + ' ' + mygod;
+//listbox1.Items.IndexOf('重复的字符')=   -1     表示没有重复
+//  if  form2.ListBox1.Items.IndexOf(sum_vv)=-1 then
+//       form2.ListBox1.Items.Insert(0, sum_vv);
+//    form2.ListBox1.Items.Insert(0, len.ToString);
+end;
+
+procedure new_addr();
+asm
+        pushad
+//        pushf
+//        push    esi
+        mov     data_base, esi
+        call    show_item_data
+//        add     esp, 4
+//         popf
+        popad
+        call    callbase; //  HookAddressSave;
+        jmp     JumpBackAddress
+end;
+
+procedure UnHook;
+  //复原
+begin
+  var xv: SIZE_T;
+  WriteProcessMemory(GetCurrentProcess(), Pointer(HookAddress_all), @HookAddressSave, 5, xv);
+
+end;
+
+initialization
+  g_baseaddr := GetModuleHandle('WeChatWin.dll');
+  HookAddress_all := g_baseaddr + HookAddress_all;
+
+  callbase := Pointer(g_baseaddr + $64550);
+  JumpBackAddress := HookAddress_all + SizeOf(TInstruction);  // +5  跳到下一个地址
+
+  CopyMemory(@HookAddressBackUp, Pointer(HookAddress_all), 5);  //memcpy
+
+
+  f3(@new_addr, Pointer(HookAddress_all));
+
+end.
+

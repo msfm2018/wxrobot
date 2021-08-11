@@ -211,6 +211,7 @@ end;
 
 procedure TDebug.Show(msg: string);
 begin
+
 {$ifdef DEBUG}
     //if not DebugWin then exit;
     outmsg(msg);

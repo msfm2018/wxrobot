@@ -59,7 +59,180 @@ function GetHeadUrl: string;
 
 function CheckLogin(): Boolean;
 
+function GetNicknameByWxid(): string;
+
+//同意添加
+procedure AgreeUserRequest(auto_vv1,auto_vv2:string);
+
+//自动添加好友 数据结构
+type
+//V1
+  v1Info = packed record
+    fill: Integer;
+    v1: pchar;
+    v1Len: Integer;
+    maxV1Len: Integer;
+    fill2: array[0..$41c - 1] of ansichar;
+    v2:PChar;// DWORD;
+  end;
+
+
+
+//V2     const	 fill3 = $25;
+  v2Info = packed record
+    fill: array[0..$24C - 1] of AnsiChar;
+    fill3: DWORD;
+    fill4: array[0..$40 - 1] of AnsiChar;
+    v2: pchar;
+    v2Len: integer;
+    maxV2Len: Integer;
+    fill2: array[0..$8 - 1] of AnsiChar;
+  end;
+  var
+  buffA: array[0..$14 - 1] of ansichar;
+  buff2B: array[0..$48 - 1] of ansichar;
+
+//  auto_vv1:string;
+//  auto_vv2:string;
+  //----------}
+
+
+
+var
+  tmpbuff: array[0..$3D8 - 1] of char;    //临时
+  userData: DWORD = 0;		//用户数据的地址
+  tmp_GetNicknameByWxid: string;
+
+
+
+  var
+  userInfoV1: v1Info;
+  userInfoV2: v2Info;     var callAdd1, callAdd2, callAdd3, callAdd4, params: dword;
+
 implementation
+
+procedure AgreeUserRequest(auto_vv1,auto_vv2:string);
+
+begin
+
+  const WxAgreeUserRequestCall1 = $1F0360;		//同意好友请求 1
+  const WxAgreeUserRequestCall2 = $5D860;		//同意好友请求 1
+  const WxAgreeUserRequestCall3 = $10FFA0;		//同意好友请求 1
+  const WxAgreeUserRequestCall4 = $1D7180;		//同意好友请求 1
+  const WxAgreeUserRequestParam = $1AB2E98;	//同意好友请求 1
+
+  callAdd1 := g_baseaddr + WxAgreeUserRequestCall1;
+  callAdd2 := g_baseaddr + WxAgreeUserRequestCall2;
+  callAdd3 := g_baseaddr + WxAgreeUserRequestCall3;
+  callAdd4 := g_baseaddr + WxAgreeUserRequestCall4;
+  params := g_baseaddr + WxAgreeUserRequestParam;
+
+  ZeroMemory(@userInfoV1, SizeOf(v1Info));
+  ZeroMemory(@userInfoV2, SizeOf(v2Info));
+  ZeroMemory(@buffA[0], $14 - 1);
+  ZeroMemory(@buff2B[0], $48 - 1);
+
+  userInfoV1.fill := 0;
+
+  userInfoV1.v2 := (@userInfoV2);
+  userInfoV1.v1 := PChar(auto_vv1); // Pointer((@v1)^);
+//  debug.Show('=================' + userInfoV1.v1);
+
+  userInfoV1.v1Len := auto_vv1.Length;
+  userInfoV1.maxV1Len := auto_vv1.Length * 2;
+
+  userInfoV2.fill3 := $25;
+  userInfoV2.v2 := PChar(auto_vv2); // Pointer((@v2)^);
+//    debug.Show('=================' + userInfoV2.v2);
+  userInfoV2.v2Len := auto_vv2.Length;
+  userInfoV2.maxV2Len := auto_vv2.Length * 2;
+
+  var asmUser: PansiChar;
+  asmUser := @userInfoV1;
+
+  var asmBuff: PAnsiChar;
+  asmBuff := @buff2B;
+
+//    debug.Show('=================' + asmUser);
+  var vvvxp: pdword;
+  vvvxp := pdword(params);
+  asm
+        pushad;
+        mov     ecx, asmUser;
+        push    $11;
+        sub     esp, $14;
+        push    esp;
+        call    callAdd1;
+        mov     ecx, asmUser;
+        lea     eax, buffa;
+        push    eax;
+        call    callAdd2;
+        mov     esi, eax;
+        sub     esp, $8;
+        mov     ecx, vvvxp;
+        call    callAdd3;
+        mov     ecx, asmBuff;
+        mov     edx, ecx;
+        push    edx;
+        push    eax;
+        push    esi;
+        call    callAdd4;
+     //   add esp,4
+//                add esp,4
+//                        add esp,4
+        popad;
+  end
+end;
+
+function GetNicknameByWxid(): string;
+var
+  vGeneralStruct: GeneralStruct;
+  userwxid: string;
+begin
+  userwxid := tmp_GetNicknameByWxid;
+  var dwCall1 := g_baseaddr + $58da50;
+  var dwCall2 := g_baseaddr + $63930;
+  var dwCall3 := g_baseaddr + $3245e0;
+
+  vGeneralStruct.pstr := Pointer((@userwxid)^); //   PChar(userwxid);
+  vGeneralStruct.iLen := userwxid.Length;
+  vGeneralStruct.iMaxLen := userwxid.Length * 2;
+  vGeneralStruct.full1 := 0;
+  vGeneralStruct.full2 := 0;
+  var asmWxid: PAnsiChar;
+  asmWxid := @vGeneralStruct;
+  ZeroMemory(@tmpbuff[0], $3D8 - 1);
+
+
+//  debug.Show('*********************************');
+//	GeneralStruct pWxid(userwxid);
+//	char* asmWxid = (char*)& pWxid.pstr;
+//	char buff[0x3D8] = { 0 };
+//	DWORD userData = 0;		//用户数据的地址
+  asm
+
+        pushad;
+        lea     edi, tmpbuff;
+        push    edi;
+        sub     esp, $14;
+        mov     eax, asmWxid;
+        mov     ecx, esp;
+        push    eax;
+        call    dwCall1;
+        call    dwCall2;
+        call    dwCall3;
+        mov     userData, edi;
+//        add esp,8     ;
+//        add esp,$14
+        popad;
+  end;
+  var tempnickname: string;
+  var wxNickAdd := userData + $64;	//昵称
+  tempnickname := PChar(wxNickAdd);
+//	swprintf_s(tempnickname, L"%s", (wchar_t*)(*((LPVOID*)wxNickAdd)));
+
+  result := tempnickname;
+end;
 
 function GetWxid: string;
 begin

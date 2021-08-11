@@ -24,8 +24,7 @@ begin
 //  iix := NativeInt(@new_addr) - NativeInt(Pointer(HookAddress)) - 5;
  tmp := NativeInt(new_addr) - NativeInt(HookAddress) - 5;
   move(tmp, jmpcode[1], 4);
-//  debug.show('------------------' + iix.ToHexString);
-//  debug.Show('--------------------' + dword(jmpcode[1]).ToHexString);
+
   var xv: SIZE_T;
   WriteProcessMemory(GetCurrentProcess(), Pointer(HookAddress), @jmpCode[0], 5, xv);
 end;

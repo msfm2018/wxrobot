@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, tlhelp32,
   Jpeg, u_debug, PsAPI, Vcl.StdCtrls, Vcl.ExtCtrls, IdBaseComponent, IdComponent, qrenc, IdTCPConnection, IdTCPClient, IdHTTP, System.Messaging,
   Vcl.CheckLst, Vcl.WinXPickers, Vcl.ComCtrls, Vcl.ExtDlgs, Vcl.WinXCtrls, Vcl.TitleBarCtrls, Vcl.Imaging.pngimage, ImgPanel, Vcl.Menus, GGlobal,
-  uWinApi, replayWindow, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
+  uWinApi,  Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
 
 const
   WM_MyMessage = WM_USER + $200;

@@ -3,10 +3,13 @@ unit Unit2; //微信代码学习3.2.1.154
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, tlhelp32,
-  Jpeg, u_debug, PsAPI, Vcl.StdCtrls, Vcl.ExtCtrls, IdBaseComponent, IdComponent, qrenc, IdTCPConnection, IdTCPClient, IdHTTP, System.Messaging,
-  Vcl.CheckLst, Vcl.WinXPickers, Vcl.ComCtrls, Vcl.ExtDlgs, Vcl.WinXCtrls, Vcl.TitleBarCtrls, Vcl.Imaging.pngimage, ImgPanel, Vcl.Menus, GGlobal,
-  uWinApi,  Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, tlhelp32,
+  Jpeg, u_debug, PsAPI, Vcl.StdCtrls, Vcl.ExtCtrls, IdBaseComponent, IdComponent,
+  qrenc, IdTCPConnection, IdTCPClient, IdHTTP, System.Messaging, Vcl.CheckLst,
+  Vcl.WinXPickers, Vcl.ComCtrls, Vcl.ExtDlgs, Vcl.WinXCtrls, Vcl.TitleBarCtrls,
+  Vcl.Imaging.pngimage, ImgPanel, Vcl.Menus, GGlobal, uWinApi, Xml.xmldom,
+  Xml.XMLIntf, Xml.XMLDoc;
 
 const
   WM_MyMessage = WM_USER + $200;
@@ -60,6 +63,7 @@ type
     XMLDoc: TXMLDocument;
     Edit1: TEdit;
     Memo1: TEdit;
+    CheckBox2: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure btnQrClick(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
@@ -94,6 +98,7 @@ type
     procedure Edit1MouseEnter(Sender: TObject);
     procedure Edit1MouseLeave(Sender: TObject);
     procedure lb__receiptDblClick(Sender: TObject);
+    procedure CheckBox2Click(Sender: TObject);
   private
     UsrCount: Integer;
     FList: TProcessRecList;
@@ -130,9 +135,7 @@ begin
       begin
 
         var FriendStruct1 := (M as TMessage<TDefineNotify>).Value.FriendStruct;
-        if FriendStruct1.wxid.Contains('gh_') or FriendStruct1.wxid.Contains('filehelper') or FriendStruct1.wxid.Contains('fmessage') or FriendStruct1.wxid.Contains
-          ('qqmail') or FriendStruct1.wxid.Contains('medianote') or FriendStruct1.wxid.Contains('qmessage') or FriendStruct1.wxid.Contains('newsapp')
-          or FriendStruct1.wxid.Contains('weixin') or FriendStruct1.wxid.Contains('qqsafe') or FriendStruct1.wxid.Contains('tmessage') or FriendStruct1.wxid.Contains('mphelper') then
+        if FriendStruct1.wxid.Contains('gh_') or FriendStruct1.wxid.Contains('filehelper') or FriendStruct1.wxid.Contains('fmessage') or FriendStruct1.wxid.Contains('qqmail') or FriendStruct1.wxid.Contains('medianote') or FriendStruct1.wxid.Contains('qmessage') or FriendStruct1.wxid.Contains('newsapp') or FriendStruct1.wxid.Contains('weixin') or FriendStruct1.wxid.Contains('qqsafe') or FriendStruct1.wxid.Contains('tmessage') or FriendStruct1.wxid.Contains('mphelper') then
           Exit
         else
         begin
@@ -140,8 +143,7 @@ begin
           if FriendStruct1.remark.Trim = '' then
             vvalue := get_space(LbUsers.Handle, lbusers.Font.Handle, FriendStruct1.wxid, v1_standard) + get_space(LbUsers.Handle, lbusers.Font.Handle, FriendStruct1.nickname, v2_standard)
           else
-            vvalue := get_space(LbUsers.Handle, lbusers.Font.Handle, FriendStruct1.wxid, v1_standard) + get_space(LbUsers.Handle, lbusers.Font.Handle,
-              FriendStruct1.nickname, v2_standard) + '备注:' + FriendStruct1.remark;
+            vvalue := get_space(LbUsers.Handle, lbusers.Font.Handle, FriendStruct1.wxid, v1_standard) + get_space(LbUsers.Handle, lbusers.Font.Handle, FriendStruct1.nickname, v2_standard) + '备注:' + FriendStruct1.remark;
 
           if LbUsers.Items.IndexOf(vvalue) = -1 then
           begin
@@ -764,6 +766,14 @@ end;
 procedure TForm2.CheckBox1Click(Sender: TObject);
 begin
   TmpShield(CheckBox1.Checked);
+end;
+
+procedure TForm2.CheckBox2Click(Sender: TObject);
+begin
+  if CheckBox2.Checked then
+    AntiRevoke(true)
+  else
+    AntiRevoke(false);
 end;
 
 procedure TForm2.CheckBox3Click(Sender: TObject);

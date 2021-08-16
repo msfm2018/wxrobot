@@ -2985,7 +2985,7 @@ object Form2: TForm2
       Top = 0
       Width = 1236
       Height = 633
-      ActivePage = TabSheet2
+      ActivePage = TabSheet4
       Align = alClient
       Style = tsFlatButtons
       TabOrder = 0
@@ -3194,6 +3194,15 @@ object Form2: TForm2
           Caption = #22810#24320#24494#20449
           TabOrder = 2
           OnClick = Button1Click
+        end
+        object CheckBox2: TCheckBox
+          Left = 162
+          Top = 45
+          Width = 119
+          Height = 17
+          Caption = #28040#24687#38450#25764#22238
+          TabOrder = 3
+          OnClick = CheckBox2Click
         end
       end
       object TabSheet2: TTabSheet

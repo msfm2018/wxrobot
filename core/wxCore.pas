@@ -61,8 +61,12 @@ function CheckLogin(): Boolean;
 
 function GetNicknameByWxid(): string;
 
+//防撤回
+
+procedure AntiRevoke(f: Boolean);
+
 //同意添加
-procedure AgreeUserRequest(auto_vv1,auto_vv2:string);
+procedure AgreeUserRequest(auto_vv1, auto_vv2: string);
 
 //自动添加好友 数据结构
 type
@@ -73,7 +77,7 @@ type
     v1Len: Integer;
     maxV1Len: Integer;
     fill2: array[0..$41c - 1] of ansichar;
-    v2:PChar;// DWORD;
+    v2: PChar; // DWORD;
   end;
 
 
@@ -88,7 +92,8 @@ type
     maxV2Len: Integer;
     fill2: array[0..$8 - 1] of AnsiChar;
   end;
-  var
+
+var
   buffA: array[0..$14 - 1] of ansichar;
   buff2B: array[0..$48 - 1] of ansichar;
 
@@ -96,23 +101,41 @@ type
 //  auto_vv2:string;
   //----------}
 
-
-
 var
   tmpbuff: array[0..$3D8 - 1] of char;    //临时
   userData: DWORD = 0;		//用户数据的地址
   tmp_GetNicknameByWxid: string;
 
-
-
-  var
+var
   userInfoV1: v1Info;
-  userInfoV2: v2Info;     var callAdd1, callAdd2, callAdd3, callAdd4, params: dword;
+  userInfoV2: v2Info;
+
+var
+  callAdd1, callAdd2, callAdd3, callAdd4, params: dword;
 
 implementation
 
-procedure AgreeUserRequest(auto_vv1,auto_vv2:string);
+procedure AntiRevoke(f: Boolean);
+var
+  fix: byte;
+  oldByte: Byte;
+var
+  OldProtect: DWORD;
+begin
+  fix := $eb;
+  oldByte := $74;
+  var Address := Pointer(g_baseaddr + $3ded99);
+  VirtualProtect(Address, 1, PAGE_EXECUTE_READWRITE, OldProtect);
+  if f then
+    CopyMemory(Address, @fix, 1)  //memcpy
+  else
+    CopyMemory(Address, @oldByte, 1);  //memcpy
+    	//恢复属性
+  VirtualProtect(Address, 5, OldProtect, OldProtect);
+end;
 
+         //同意好友请求
+procedure AgreeUserRequest(auto_vv1, auto_vv2: string);
 begin
 
   const WxAgreeUserRequestCall1 = $1F0360;		//同意好友请求 1

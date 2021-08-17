@@ -47,7 +47,7 @@ begin
         if IsWxVersionValid() then
         begin
           Createthread(nil, 0, @MyThreadFun, @P, 0, Id);
-          debug.Show('success');
+        //  debug.Show('success');
         end
         else
           messagebox(0, '提示', '微信版本不符要求', 0);

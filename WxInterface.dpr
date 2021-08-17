@@ -25,6 +25,8 @@ type
   end;
 {$R *.res}
 
+function IsWxVersionValid(): Boolean; cdecl external 'vxVer.dll' name 'IsWxVersionValid';
+
 function MyThreadFun(var Param: Test): Integer; stdcall;
 begin
   if Form2 = nil then
@@ -42,7 +44,13 @@ begin
     DLL_PROCESS_ATTACH:
       begin
         P.a := 5;
-        Createthread(nil, 0, @MyThreadFun, @P, 0, Id);
+        if IsWxVersionValid() then
+        begin
+          Createthread(nil, 0, @MyThreadFun, @P, 0, Id);
+          debug.Show('success');
+        end
+        else
+          messagebox(0, '提示', '微信版本不符要求', 0);
       end;
     DLL_PROCESS_DETACH:
       ;

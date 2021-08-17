@@ -157,7 +157,7 @@ BOOL InjectDll(HANDLE& wxPid)
 		si.wShowWindow = TRUE;          // 此成员设为TRUE的话则显示新建进程的主窗口，
 									   // 为FALSE的话则不显示
 
-		CreateProcess(szProductType.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+		CreateProcessW(szProductType.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 
 		HWND  hWechatMainForm = NULL;
 		//WeChatLoginWndForPC
@@ -172,6 +172,7 @@ BOOL InjectDll(HANDLE& wxPid)
 		}
 		dwPid = pi.dwProcessId;
 		wxPid = pi.hProcess;
+
 	}
 	//检测dll是否已经注入
 	if (CheckIsInject(dwPid))

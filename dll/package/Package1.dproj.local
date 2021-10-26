@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2021/10/25 22:44:03.387,=rtl.dcp</Transaction>
+    <Transaction>2021/10/25 22:44:54.037,=D:\wx-delphi\wxrobot-main\dll\package\ImgPanel.pas</Transaction>
+    <Transaction>2021/10/25 22:45:02.495,D:\wx-delphi\wxrobot-main\dll\package\Package1.dproj=D:\delphi11\Package1.dproj</Transaction>
+    <Transaction>2021/10/25 22:45:12.112,=vcl.dcp</Transaction>
+  </Transactions>
+</BorlandProject>

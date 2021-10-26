@@ -1,0 +1,50 @@
+package qdac3.qdb;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  qdac3.rtl;
+
+contains
+  qconverter_adoxml in '..\..\Source\qconverter_adoxml.pas',
+  qconverter_cdsxml in '..\..\Source\qconverter_cdsxml.pas',
+  qconverter_csv in '..\..\Source\qconverter_csv.pas',
+  qconverter_fdac in '..\..\Source\qconverter_fdac.pas',
+  qconverter_sql in '..\..\Source\qconverter_sql.pas',
+  qconverter_stds in '..\..\Source\qconverter_stds.pas',
+  qdb in '..\..\Source\qdb.pas',
+  qprov_pgsql in '..\..\Source\qprov_pgsql.pas',
+  qprov_sqlite in '..\..\Source\qprov_sqlite.pas',
+  qsp_aes in '..\..\Source\qsp_aes.pas',
+  qsp_zlib in '..\..\Source\qsp_zlib.pas',
+  SqliteMemInfo in '..\..\Source\SqliteMemInfo.pas',
+  MemoryModule in '..\..\Source\MemoryModule.pas',
+  qdacreg in '..\..\Source\qdacreg.pas';
+
+end.

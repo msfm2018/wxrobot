@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<codetemplate xmlns="http://schemas.borland.com/Delphi/2005/codetemplates" version="1.0.0">
+	<template name="OCImport" invoke="manual">
+		<description>Object C Class Import Declare</description>
+		<author>TU2</author>
+		<point name="classname">
+			<script language="Delphi">
+				InvokeCodeCompletion;
+			</script>
+			 <text>MyOC</text>
+			 <hint>Object C Class Name</hint>
+		 </point>
+		<point name="guid1">
+			<script language="InsertValue" onvalidate="true">
+			Type=GUID
+			</script>
+		 </point>
+		<point name="guid2">
+			<script language="InsertValue" onvalidate="true">
+			Type=GUID
+			</script>
+		 </point>
+		<code language="Delphi" context="typedecl" delimiter="|"><![CDATA[
+|classname| = interface(NSObject)
+['|guid1|']
+|*|{ object method declarations }
+end;
+|classname|Class = interface(NSObjectClass)
+['|guid2|']
+|*|{ class method declarations }
+end;
+T|classname| = class(TOCGenericImport<|classname|Class, |classname|>) end;
+]]>
+		</code>
+	</template>
+</codetemplate>
+
+
+
+
+
+	

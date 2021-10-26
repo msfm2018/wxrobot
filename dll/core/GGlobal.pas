@@ -8,7 +8,10 @@ uses
   Generics.Collections, Vcl.StdCtrls;
 
 var
+ReplayList: TDictionary<string, string>;
   g_userinfolist: TDictionary<string, string>;    //¥Ê¥¢∫√”—–≈œ¢ wxid  nickname
+
+
 
 function get_space(h: THandle; hf: HFont; v2,v1_standard: string): string;
 
@@ -49,10 +52,12 @@ end;
 
 initialization
   g_userinfolist := TDictionary<string, string>.create;
+      ReplayList := TDictionary<string, string>.create;
+
 
 
 finalization
   g_userinfolist.free;
-
+       ReplayList.Free;
 end.
 

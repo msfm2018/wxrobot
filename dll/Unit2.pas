@@ -9,10 +9,12 @@ uses
   qrenc, IdTCPConnection, IdTCPClient, IdHTTP, System.Messaging, Vcl.CheckLst,
   Vcl.WinXPickers, Vcl.ComCtrls, Vcl.ExtDlgs, Vcl.WinXCtrls, Vcl.TitleBarCtrls,
   Vcl.Imaging.pngimage, ImgPanel, Vcl.Menus, GGlobal, uWinApi, Xml.xmldom,
-  Xml.XMLIntf, Xml.XMLDoc;
+  Xml.XMLIntf, Xml.XMLDoc, IdCustomTCPServer, IdCustomHTTPServer, IdHTTPServer,
+  Vcl.Mask, IdContext, qjson;
 
 const
   WM_MyMessage = WM_USER + $200;
+
 
 type
   TForm2 = class(TForm)
@@ -32,7 +34,6 @@ type
     lb__receipt: TCheckListBox;
     BtnExport: TButton;
     SaveTextFileDialog1: TSaveTextFileDialog;
-    Label7: TLabel;
     PageControl1: TPageControl;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
@@ -64,6 +65,15 @@ type
     Edit1: TEdit;
     Memo1: TEdit;
     CheckBox2: TCheckBox;
+    TabSheet6: TTabSheet;
+    IdHTTPServer1: TIdHTTPServer;
+    btn_web_start: TButton;
+    btn_web_stop: TButton;
+    edt_web: TLabeledEdit;
+    StatusBar1: TStatusBar;
+    Memo2Log: TMemo;
+    l6: TLabel;
+    Label5: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure btnQrClick(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
@@ -76,7 +86,7 @@ type
     procedure BtnExportClick(Sender: TObject);
     procedure lv_recvChange(Sender: TObject; Item: TListItem; Change: TItemChange);
     procedure pnl_leftMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure l4Click(Sender: TObject);
+    procedure l(Sender: TObject);
     procedure l1Click(Sender: TObject);
     procedure l2Click(Sender: TObject);
     procedure l3Click(Sender: TObject);
@@ -99,6 +109,11 @@ type
     procedure Edit1MouseLeave(Sender: TObject);
     procedure lb__receiptDblClick(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
+    procedure btn_web_startClick(Sender: TObject);
+    procedure btn_web_stopClick(Sender: TObject);
+    procedure IdHTTPServer1CommandGet(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+    procedure l6Click(Sender: TObject);
+    procedure Memo2LogChange(Sender: TObject);
   private
     UsrCount: Integer;
     FList: TProcessRecList;
@@ -106,7 +121,7 @@ type
     function GetValue(offset: dword): ansistring;
     //消息订阅
     procedure sub;
-    procedure setColorBtn(c1, c2, c3, c4, c5: Boolean);
+    procedure setColorBtn(c1, c2, c3, c4, c5, c6: Boolean);
     procedure GetWeChatProcess;
     function IsTagetPid(APid: THandle): boolean;
     procedure SetWnd(w, h: Integer);
@@ -115,6 +130,7 @@ type
 var
   Form2: TForm2;
   g_data_txt: string;
+
 
 implementation
 {$R *.dfm}
@@ -406,7 +422,7 @@ begin
 
         end;
 
-        PostMessage(handle, WM_MyMessage, integer(Pchar(ChatMessageData.wxid)), 0);
+        PostMessage(handle, WM_MyMessage, integer(Pchar(ChatMessageData.wxid)), integer(Pchar(ChatMessageData.content)));
       end;
     end;
 end;
@@ -414,9 +430,12 @@ end;
 procedure TForm2.doMyMessage(var mymsg: Winapi.Messages.TMessage);
 var
   wxid: string;
+  msg: string;
 begin
 
   wxid := PChar(mymsg.WParam);
+  msg := pchar(mymsg.LParam);
+  debug.Show('bound @??::::' + wxid);
 
   TThread.CreateAnonymousThread(
     procedure
@@ -444,6 +463,61 @@ begin
 
         end;
       end
+    end).start;
+
+  if wxid.ToLower.Contains('@chatroom') then
+  begin
+    if msg.Contains('@' + GetNickname) then
+    begin
+
+      TThread.CreateAnonymousThread(
+        procedure
+        var
+          i: Integer;
+          vmsg: string;
+          k: string;
+        begin
+          if ReplayList.TryGetValue(GetWxid, vmsg) then
+          begin
+            TThread.CreateAnonymousThread(
+              procedure
+              begin
+
+                SendMsg(wxid, Trim(vmsg));
+
+              end).start;
+
+            sleep(1000);
+          end;
+        end).start;
+
+    end;
+  end;
+
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      i: Integer;
+      msg: string;
+      k: string;
+    begin
+      for k in ReplayList.Keys do
+      begin
+        if wxid = k then
+        begin
+//          debug.Show('web set' + wxid);
+          ReplayList.TryGetValue(k, msg);
+          TThread.CreateAnonymousThread(
+            procedure
+            begin
+
+              SendMsg(k, Trim(msg));
+
+            end).start;
+          sleep(1000);
+        end;
+      end;
+
     end).start;
 
 end;
@@ -527,6 +601,133 @@ begin
   imagestream.Free;
   jpg.free;
 
+end;
+
+  //{
+//“msg”:””, #错误信息
+//“errorCode”:0, #错误码
+//“data”:{ #返回的具体的数据
+//..........
+//}
+//}
+
+type
+  TValueRecord = record
+    k: string;
+    v: string;
+  end;
+
+type
+  TResultRecord = record
+    msg: string;
+    errorCode: Integer;
+    data: array of TValueRecord;
+  end;
+
+type
+  TReplayResult = record
+    msg: string;
+    errorCode: Integer;
+    data: string;
+  end;
+
+procedure TForm2.IdHTTPServer1CommandGet(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var
+  json: string;
+  qjson: tqjson;
+begin
+  if SameText(ARequestInfo.Command.ToLower, 'get') then
+  begin
+//  memo2.Lines.Add(ARequestInfo.Document);
+//  memo2.Lines.Add(ARequestInfo.Params.Values['t1']);
+//  memo2.Lines.Add(ARequestInfo.Params.Values['t2']);
+    var suv: string;
+    qjson := tqjson.create;
+    var ResultRecord: TResultRecord;
+    if ARequestInfo.Document.ToLower = '/getusers' then
+    begin
+      SetLength(ResultRecord.data, g_userinfolist.Count);
+      var inx := 0;
+      var k: string;
+      for k in g_userinfolist.Keys do
+      begin
+        ResultRecord.data[inx].k := k;
+        var vv: string;
+        g_userinfolist.TryGetValue(k, vv);
+        ResultRecord.data[inx].v := vv;
+        inc(inx);
+      end;
+
+      ResultRecord.msg := '';
+      ResultRecord.errorCode := 0;
+
+      qjson.FromRecord(ResultRecord);
+
+    end
+    else if ARequestInfo.Document.ToLower = '/replay' then       // http://tt.com:6669/Replay?wxid=aa&msg=aaaa
+    begin
+      var msgdata := ARequestInfo.Params.Values['msg'];
+      var wxid: string;
+      wxid := ARequestInfo.Params.Values['wxid'];
+      Memo2Log.Lines.Add(wxid + ':' + msgdata);
+
+      if g_userinfolist.ContainsKey(wxid) then
+      begin
+        ReplayList.AddOrSetValue(wxid, msgdata);
+        var rr: TReplayResult;
+        rr.msg := '';
+        rr.errorCode := 0;
+        rr.data := 'ok';
+        qjson.FromRecord(rr);
+      end
+      else
+      begin
+        debug.Show('账号不存在');
+        var rr: TReplayResult;
+        rr.msg := '账号不存在';
+        rr.errorCode := -1;
+        rr.data := '';
+        qjson.FromRecord(rr);
+      end;
+    end
+    else if ARequestInfo.Document.ToLower = '/replaydel' then
+    begin
+
+      var wxid: string;
+      wxid := ARequestInfo.Params.Values['wxid'];
+      if ReplayList.ContainsKey(wxid) then
+      begin
+        ReplayList.Remove(wxid);
+        var rr: TReplayResult;
+        rr.msg := '';
+        rr.errorCode := 0;
+        rr.data := 'ok';
+        qjson.FromRecord(rr);
+      end
+      else
+      begin
+        var rr: TReplayResult;
+        rr.msg := '账号不存在';
+        rr.errorCode := -1;
+        rr.data := '';
+        qjson.FromRecord(rr);
+
+      end;
+    end
+    else
+
+    begin
+      var rr: TReplayResult;
+      rr.msg := '未知错误';
+      rr.errorCode := -1;
+      rr.data := '';
+      qjson.FromRecord(rr);
+    end;
+    AResponseInfo.ContentText := qjson.ToString;
+    AResponseInfo.ContentType := 'text/html; charset=utf-8';
+    AResponseInfo.WriteContent;
+    qjson.Free;
+  end;
 end;
 
 procedure TForm2.Image2MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -703,6 +904,26 @@ begin
 //    ShowMessage('勾选发送');
 end;
 
+procedure TForm2.btn_web_startClick(Sender: TObject);
+begin
+  IdHTTPServer1.Bindings.Clear;
+
+  IdHTTPServer1.DefaultPort := StrToIntDef(edt_web.Text, 7777);
+//  IdHTTPServer1.Bindings.Add.IP := '127.0.0.1';
+  IdHTTPServer1.Active := True;
+  StatusBar1.Panels.Items[0].Text := '服务已运行';
+  btn_web_start.Enabled := false;
+  btn_web_stop.Enabled := true;
+end;
+
+procedure TForm2.btn_web_stopClick(Sender: TObject);
+begin
+  IdHTTPServer1.Active := false;
+  StatusBar1.Panels.Items[0].Text := '服务已关闭';
+  btn_web_start.Enabled := true;
+  btn_web_stop.Enabled := false;
+end;
+
 procedure TForm2.BtnExportClick(Sender: TObject);
 begin
 
@@ -713,19 +934,20 @@ begin
   end;
 end;
 
-procedure tform2.setColorBtn(c1, c2, c3, c4, c5: Boolean);
+procedure tform2.setColorBtn(c1, c2, c3, c4, c5, c6: Boolean);
 begin
   l1.Transparent := c1;
   l2.Transparent := c2;
   l3.Transparent := c3;
   l4.Transparent := c4;
   l5.Transparent := c5;
+  l6.Transparent := c6;
 end;
 
 procedure TForm2.l2Click(Sender: TObject);
 begin
   PageControl1.ActivePage := TabSheet2;
-  setColorBtn(True, false, True, True, True);
+  setColorBtn(True, false, True, True, True, true);
   memo1.SetFocus;
 end;
 
@@ -733,7 +955,7 @@ procedure TForm2.l1Click(Sender: TObject);
 begin
   PageControl1.ActivePage := TabSheet1;
 
-  setColorBtn(false, true, True, True, True);
+  setColorBtn(false, true, True, True, True, true);
   edit1.SetFocus;
 end;
 
@@ -749,20 +971,15 @@ procedure TForm2.btn_max1Click(Sender: TObject);
 begin
   if windowstate = wsmaximized then
   begin
-//    btn_max1.Pic.LoadFromFile('./res/max.png');
-//    btn_max1.HotPic.LoadFromFile('./res/max_h.png');
     windowstate := wsnormal;
-
   end
   else
   begin
-//    btn_max1.Pic.LoadFromFile('./res/restore.png');
-//    btn_max1.HotPic.LoadFromFile('./res/restore_h.png');
     windowstate := wsmaximized;
   end;
 end;
-
 //SendMsg(edit2.text, Edit1.Text);
+
 procedure TForm2.CheckBox1Click(Sender: TObject);
 begin
   TmpShield(CheckBox1.Checked);
@@ -797,19 +1014,26 @@ end;
 procedure TForm2.l5Click(Sender: TObject);
 begin
   PageControl1.ActivePage := TabSheet4;
-  setColorBtn(True, True, True, True, false);
+  setColorBtn(True, True, True, True, false, true);
 end;
 
 procedure TForm2.l3Click(Sender: TObject);
 begin
   PageControl1.ActivePage := TabSheet3;
-  setColorBtn(True, True, false, True, True);
+  setColorBtn(True, True, false, True, True, true);
 end;
 
-procedure TForm2.l4Click(Sender: TObject);
+procedure TForm2.l(Sender: TObject);
 begin
   PageControl1.ActivePage := TabSheet5;
-  setColorBtn(True, True, True, false, True);
+  setColorBtn(True, True, True, false, True, true);
+end;
+
+procedure TForm2.l6Click(Sender: TObject);
+begin
+//http://127.0.0.1:8000/test?t1=china&t2=cxg
+  PageControl1.ActivePage := TabSheet6;
+  setColorBtn(True, True, true, True, True, false);
 end;
 
 procedure TForm2.LbUsersDblClick(Sender: TObject);
@@ -860,11 +1084,22 @@ begin
   Memo1.Color := $f5f5f5;
 end;
 
+procedure TForm2.Memo2LogChange(Sender: TObject);
+begin
+  if Memo2Log.Lines.Count > 40 then
+  begin
+    for var i := 1 to 40 do
+    begin
+      Memo2Log.lines.Delete(i)
+    end;
+
+  end;
+
+end;
+
 procedure TForm2.N1Click(Sender: TObject);
 begin
   var str: string;
-// str := InputBox('说点啥', '默认收到', 'AA');
-// if str='AA' then exit;
   if lv_recv.Selected = nil then
     exit;
   if InputQuery('回复', '内容', str) then

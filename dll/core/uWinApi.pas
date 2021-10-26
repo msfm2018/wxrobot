@@ -13,10 +13,9 @@ unit uWinApi;
 interface
 
 uses
-  windows, TLHelp32, Generics.collections;
+  windows, TLHelp32, Generics.collections,System.SysUtils;
 
 type
-
   PSystemHandle = ^TSystemHandle; // 此结构体未公开，找了很久才弄正确。
 
   TSystemHandle = packed record // 共16字节. 长度一定要准确。否则，后面没法玩。
@@ -53,15 +52,14 @@ type
   // 以便调用者重新分配 buff 再次调用
   // ASysInfoCls 是查询什么类别。 MS 没有全部公开. $10 为 SystemHanle.
   // ASysInfo 理解为 Buff 就行了。
-function ZwQuerySystemInformation(ASysInfoCls: Integer; ASysInfo: Pointer; ABufLen: Cardinal;
-  var ASize: Cardinal): Cardinal; stdcall; external 'ntdll.dll';
+function ZwQuerySystemInformation(ASysInfoCls: Integer; ASysInfo: Pointer; ABufLen: Cardinal; var ASize: Cardinal): Cardinal; stdcall; external 'ntdll.dll';
 
-
-function NtQueryObject(Ahandle: THandle; AQuertyIndex: Integer; ABuff: Pointer; ABuffSize: Cardinal;
-  var ASize: Cardinal): Cardinal; stdcall; external 'ntdll.dll';
+function NtQueryObject(Ahandle: THandle; AQuertyIndex: Integer; ABuff: Pointer; ABuffSize: Cardinal; var ASize: Cardinal): Cardinal; stdcall; external 'ntdll.dll';
 
 // 获取当前的进程
 function GetAllProcess: TProcessRecList;
+
+function FileVersion(const FileName: string): string;
 
 implementation
 
@@ -99,4 +97,45 @@ begin
   CloseHandle(SnapshotHandle);
 end;
 
+function FileVersion(const FileName: string): string;
+var
+  VerInfoSize: Cardinal;
+  VerValueSize: Cardinal;
+  Dummy: Cardinal;
+  PVerInfo: Pointer;
+  PVerValue: PVSFixedFileInfo;
+  iLastError: DWord;
+begin
+  Result := '';
+  VerInfoSize := GetFileVersionInfoSize(PChar(FileName), Dummy);
+  if VerInfoSize > 0 then
+  begin
+    GetMem(PVerInfo, VerInfoSize);
+    try
+      if GetFileVersionInfo(PChar(FileName), 0, VerInfoSize, PVerInfo) then
+      begin
+        if VerQueryValue(PVerInfo, '\', Pointer(PVerValue), VerValueSize) then
+          with PVerValue^ do
+            Result := Format('%d.%d.%d.%d', [HiWord(dwFileVersionMS), //Major
+              LoWord(dwFileVersionMS), //Minor
+              HiWord(dwFileVersionLS), //Release
+              LoWord(dwFileVersionLS)]); //Build
+      end
+      else
+      begin
+        iLastError := GetLastError;
+        Result := Format('GetFileVersionInfo failed: (%d) %s', [iLastError, SysErrorMessage(iLastError)]);
+      end;
+    finally
+      FreeMem(PVerInfo, VerInfoSize);
+    end;
+  end
+  else
+  begin
+    iLastError := GetLastError;
+    Result := Format('GetFileVersionInfo failed: (%d) %s', [iLastError, SysErrorMessage(iLastError)]);
+  end;
+end;
+
 end.
+

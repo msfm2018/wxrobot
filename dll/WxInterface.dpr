@@ -25,7 +25,22 @@ type
   end;
 {$R *.res}
 
-function IsWxVersionValid(): Boolean; cdecl external 'vxVer.dll' name 'IsWxVersionValid';
+//function IsWxVersionValid(): Boolean; cdecl external 'vxVer.dll' name 'IsWxVersionValid';
+
+function IsWxVersionValid: Boolean;
+var
+  wxBaseAddress: DWORD;
+  VersionFilePath: array[0..MAX_PATH - 1] of char;
+begin
+  wxBaseAddress := GetModuleHandle('WeChatWin.dll');
+  var wxVersoin := '3.2.1.154';
+  GetModuleFileName(wxBaseAddress, VersionFilePath, max_path);
+  var ver := FileVersion(VersionFilePath);
+  if wxVersoin = ver then
+    Result := True
+  else
+    Result := False;
+end;
 
 function MyThreadFun(var Param: Test): Integer; stdcall;
 begin

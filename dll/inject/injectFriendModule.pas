@@ -45,19 +45,22 @@ begin
   p1 := data_base + 4 + 4;
 
   FriendStruct1.wxid := PChar(Pointer((@p1)^)^);
-
+//   Debug.Show('wxid:'+FriendStruct1.wxid )   ;
   if FriendStruct1.wxid.Contains('gh_') or FriendStruct1.wxid.Contains('filehelper') or FriendStruct1.wxid.Contains('fmessage') or FriendStruct1.wxid.Contains('qqmail') or FriendStruct1.wxid.Contains('medianote') or FriendStruct1.wxid.Contains('qmessage') or FriendStruct1.wxid.Contains('newsapp') or FriendStruct1.wxid.Contains('weixin') or FriendStruct1.wxid.Contains('qqsafe') or FriendStruct1.wxid.Contains('tmessage') or FriendStruct1.wxid.Contains('mphelper') then
     Exit;
 
   p1 := data_base + $64;
   FriendStruct1.nickname := PChar(Pointer((@p1)^)^);
 
+//    Debug.Show('nickname:'+FriendStruct1.nickname )   ;
+
+
   p1 := data_base + $1c;
   FriendStruct1.wxNumber := PChar(Pointer((@p1)^)^);
-
+//       Debug.Show('wxNumber:'+FriendStruct1.wxNumber )   ;
   p1 := data_base + $50;
   FriendStruct1.Remark := PChar(Pointer((@p1)^)^);
-
+//           Debug.Show('Remark:'+FriendStruct1.Remark )   ;
   g_userinfolist.TryAdd(FriendStruct1.wxid, FriendStruct1.nickname);
 
   DefineNotify.FriendStruct := FriendStruct1;

@@ -11,16 +11,15 @@ object Form2: TForm2
   Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnPaint = FormPaint
   OnShow = FormShow
+  PixelsPerInch = 96
   DesignSize = (
     1326
     635)
-  PixelsPerInch = 96
   TextHeight = 16
   object pnlQr: TPanel
     Left = 2
@@ -216,8 +215,35 @@ object Form2: TForm2
       ParentFont = False
       Transparent = True
       Layout = tlCenter
-      OnClick = l4Click
+      OnClick = l
       ExplicitWidth = 91
+    end
+    object l6: TLabel
+      AlignWithMargins = True
+      Left = -2
+      Top = 367
+      Width = 93
+      Height = 40
+      Cursor = crHandPoint
+      Margins.Left = 8
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      Alignment = taCenter
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'web'#26381#21153
+      Color = 1748250
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWhite
+      Font.Height = -19
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+      Layout = tlCenter
+      OnClick = l6Click
     end
     object btn_max1: TImgPanel
       Left = 61
@@ -2985,7 +3011,7 @@ object Form2: TForm2
       Top = 0
       Width = 1236
       Height = 633
-      ActivePage = TabSheet4
+      ActivePage = TabSheet5
       Align = alClient
       Style = tsFlatButtons
       TabOrder = 0
@@ -3025,8 +3051,8 @@ object Form2: TForm2
             ParentCtl3D = False
             ParentDoubleBuffered = False
             ParentFont = False
-            TabOrder = 0
             StyleElements = []
+            TabOrder = 0
             OnDblClick = LbUsersDblClick
           end
           object Panel1: TPanel
@@ -3232,20 +3258,12 @@ object Form2: TForm2
           DesignSize = (
             1228
             84)
-          object Label7: TLabel
-            Left = 2
-            Top = 8
-            Width = 96
-            Height = 16
+          object Label5: TLabel
+            Left = 5
+            Top = 17
+            Width = 78
+            Height = 13
             Caption = #21246#36873#33258#21160#22238#22797
-            Color = clBlack
-            Font.Charset = GB2312_CHARSET
-            Font.Color = clBlack
-            Font.Height = -16
-            Font.Name = #23435#20307
-            Font.Style = []
-            ParentColor = False
-            ParentFont = False
           end
           object Memo1: TEdit
             Left = 137
@@ -3286,7 +3304,6 @@ object Form2: TForm2
           Font.Style = []
           ItemHeight = 21
           ParentFont = False
-          PopupMenu = PopupMenu1
           TabOrder = 1
           OnDblClick = lb__receiptDblClick
         end
@@ -3347,6 +3364,61 @@ object Form2: TForm2
           Font.Name = #23435#20307
           Font.Style = []
           ParentFont = False
+        end
+      end
+      object TabSheet6: TTabSheet
+        Caption = 'web'#26381#21153#22120
+        ImageIndex = 5
+        object btn_web_start: TButton
+          Left = 232
+          Top = 122
+          Width = 113
+          Height = 25
+          Caption = #21551#21160'web'#26381#21153
+          TabOrder = 0
+          OnClick = btn_web_startClick
+        end
+        object btn_web_stop: TButton
+          Left = 232
+          Top = 167
+          Width = 113
+          Height = 25
+          Caption = #20851#38381'web'#26381#21153
+          Enabled = False
+          TabOrder = 1
+          OnClick = btn_web_stopClick
+        end
+        object edt_web: TLabeledEdit
+          Left = 232
+          Top = 65
+          Width = 121
+          Height = 24
+          EditLabel.Width = 54
+          EditLabel.Height = 16
+          EditLabel.Caption = 'web'#31471#21475
+          LabelPosition = lpLeft
+          TabOrder = 2
+          Text = '6669'
+        end
+        object StatusBar1: TStatusBar
+          Left = 0
+          Top = 536
+          Width = 1228
+          Height = 63
+          Panels = <
+            item
+              Text = #26381#21153#24050#20851#38381
+              Width = 300
+            end>
+        end
+        object Memo2Log: TMemo
+          Left = 579
+          Top = 0
+          Width = 649
+          Height = 536
+          Align = alRight
+          TabOrder = 4
+          OnChange = Memo2LogChange
         end
       end
     end
@@ -3437,5 +3509,11 @@ object Form2: TForm2
   object XMLDoc: TXMLDocument
     Left = 824
     Top = 376
+  end
+  object IdHTTPServer1: TIdHTTPServer
+    Bindings = <>
+    OnCommandGet = IdHTTPServer1CommandGet
+    Left = 416
+    Top = 256
   end
 end

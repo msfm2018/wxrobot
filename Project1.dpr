@@ -67,6 +67,35 @@ begin
 
 end;
 
+function CheckIsInject_(dwProcessid: DWORD): Boolean;
+var
+  ModuleList: Thandle;
+  pm: TMODULEENTRY32;
+
+begin
+  result := false;
+  ModuleList := CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwProcessid);
+
+  pm.dwSize := sizeof(TMODULEENTRY32);
+
+  if module32first(ModuleList, pm) then
+  begin
+
+    while module32next(ModuleList, pm) do
+
+    begin
+      if pm.szModule = 'WeChatHelper.dll' then
+      begin
+
+        result := true;
+        Break;
+      end;
+    end;
+
+  end;
+
+end;
+
 function ProcessNameFindPID(ProcessName: string): DWORD;
 begin
   result := 0;
@@ -77,7 +106,7 @@ begin
   hProcess := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (Process32First(hProcess, pe32)) then
   begin
-  //µÚÒ»¸ö±È½Ï¶àÓà
+  //ç¬¬ä¸€ä¸ªæ¯”è¾ƒå¤šä½™
     if LowerCase(pe32.szExeFile) = ProcessName.ToLower then
     begin
       result := pe32.th32ProcessID;
@@ -125,7 +154,7 @@ end;
 
 procedure InjectDll;
 var
-  szPath: ansistring; //±ØĞë¶¨ÒåÔÚÍâÃæ ÇÒ ansistring
+  szPath: ansistring; //å¿…é¡»å®šä¹‰åœ¨å¤–é¢ ä¸” ansistring
 begin
 
   var WxHandle := ProcessNameFindPID(WECHAT_PROCESS_NAME);

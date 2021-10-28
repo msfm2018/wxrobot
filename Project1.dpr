@@ -40,8 +40,7 @@ uses
   IdHTTPServer,
   Vcl.Mask,
   IdContext,
-  System.Win.Registry,
-  u_debug in 'u_debug.pas';
+  System.Win.Registry;
 
 const
   WECHAT_PROCESS_NAME = 'WeChat.exe';
@@ -50,6 +49,11 @@ const
 const
   DLLNAME = 'WxInterface.dll';
 
+function CreateRemoteThreadLoadDll(lpwLibFile: LPCWSTR; dwProcessId: DWORD): boolean; cdecl; external 'assist.dll';
+
+function CreateRemoteThreadUnloadDll(lpwLibFile: LPCWSTR; dwProcessId: DWORD): boolean; cdecl; external 'assist.dll';
+
+function CheckIsInject(dwProcessid: DWORD): boolean; cdecl; external 'assist.dll';
 
 procedure RunSingle();
 begin
@@ -144,29 +148,14 @@ begin
   while (hWechatMainForm = 0) do
   begin
     hWechatMainForm := FindWindow('WeChatLoginWndForPC', nil);
-    Sleep(500);
+    Sleep(100);
   end;
 
-//  if CheckIsInject(dwPid) then
+ // if not CheckIsInject(pi.dwProcessId) then
 
-
-  var hProcess := OpenProcess(PROCESS_ALL_ACCESS, FALSE, pi.dwProcessId);
-
-  var pAddress := VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-
-  szPath := GetCurrentDir + '\' + DLLNAME;
-
-  var lpNumberOfBytes: NativeUInt;
-
-  WriteProcessMemory(hProcess, pAddress, PChar(szPath), MAX_PATH, lpNumberOfBytes);
-
-  var LoadLibraryA := GetProcAddress(GetModuleHandleA('kernel32.dll'), 'LoadLibraryA');
-  var bcc: Cardinal;
-  var hThread := CreateRemoteThread(hProcess, nil, 0, LoadLibraryA, pAddress, 0, bcc);
-  WaitForSingleObject(hThread, INFINITE);
-  CloseHandle(hThread);
-  CloseHandle(hProcess);
-
+    szPath := GetCurrentDir + '\' + DLLNAME;
+    if not CreateRemoteThreadLoadDll(PChar(szPath), pi.dwProcessId) then
+      ExitProcess(0);
 end;
 
 begin
@@ -181,6 +170,6 @@ end.
 
 
 
-//·ÏÆú
+
 
 

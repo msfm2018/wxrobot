@@ -18,42 +18,42 @@ type
   end;
 
 var
-  SendMsgCallBuff1: array[0..$81C - 1] of char;   //±ØĞëÍâÃæ
+  SendMsgCallBuff1: array[0..$81C - 1] of char;   //å¿…é¡»å¤–é¢
   SendMsgCallBuff2: array[0..$81C - 1] of char;
   g_baseaddr: Nativeuint;
 
 const
-  nickname_offset = $1ad1bac;  //êÇ³Æ  wx 3.2.1.154
+  nickname_offset = $1ad1bac;  //æ˜µç§°  wx 3.2.1.154
 
 
-//  ·¢ËÍÏûÏ¢
+//  å‘é€æ¶ˆæ¯
 
 procedure SendMsg(wxid, txtData: string);
 
-//  Ìø×ªµ½¶şÎ¬Âë
+//  è·³è½¬åˆ°äºŒç»´ç 
 procedure GotoQr();
 
-//Ãâ´òÈÅ
+//å…æ‰“æ‰°
 procedure TmpShield(f: Boolean);
 
-//È¡µÃ¶şÎ¬Âë×Ö·û´®
+//å–å¾—äºŒç»´ç å­—ç¬¦ä¸²
 function QrStr: string;
 
-//ĞŞ¸ÄêÇ³Æ
+//ä¿®æ”¹æ˜µç§°
 procedure ChangeNickname(NewNickname: string);
 
 function GetNickname: string;
 
-//Ê¡ÊĞ
+//çœå¸‚
 function GetRegion: string;
 
-//Ç©Ãû
+//ç­¾å
 function GetSign: string;
 
 function GetPhone: string;
 
 function GetWxid: string;
-//µÃµ½Í·Ïñurl
+//å¾—åˆ°å¤´åƒurl
 
 function GetHeadUrl: string;
 
@@ -61,14 +61,14 @@ function CheckLogin(): Boolean;
 
 function GetNicknameByWxid(): string;
 
-//·À³·»Ø
+//é˜²æ’¤å›
 
 procedure AntiRevoke(f: Boolean);
 
-//Í¬ÒâÌí¼Ó
+//åŒæ„æ·»åŠ 
 procedure AgreeUserRequest(auto_vv1, auto_vv2: string);
 
-//×Ô¶¯Ìí¼ÓºÃÓÑ Êı¾İ½á¹¹
+//è‡ªåŠ¨æ·»åŠ å¥½å‹ æ•°æ®ç»“æ„
 type
 //V1
   v1Info = packed record
@@ -102,8 +102,8 @@ var
   //----------}
 
 var
-  tmpbuff: array[0..$3D8 - 1] of char;    //ÁÙÊ±
-  userData: DWORD = 0;		//ÓÃ»§Êı¾İµÄµØÖ·
+  tmpbuff: array[0..$3D8 - 1] of char;    //ä¸´æ—¶
+  userData: DWORD = 0;		//ç”¨æˆ·æ•°æ®çš„åœ°å€
   tmp_GetNicknameByWxid: string;
 
 var
@@ -130,19 +130,19 @@ begin
     CopyMemory(Address, @fix, 1)  //memcpy
   else
     CopyMemory(Address, @oldByte, 1);  //memcpy
-    	//»Ö¸´ÊôĞÔ
+    	//æ¢å¤å±æ€§
   VirtualProtect(Address, 5, OldProtect, OldProtect);
 end;
 
-         //Í¬ÒâºÃÓÑÇëÇó
+         //åŒæ„å¥½å‹è¯·æ±‚
 procedure AgreeUserRequest(auto_vv1, auto_vv2: string);
 begin
 
-  const WxAgreeUserRequestCall1 = $1F0360;		//Í¬ÒâºÃÓÑÇëÇó 1
-  const WxAgreeUserRequestCall2 = $5D860;		//Í¬ÒâºÃÓÑÇëÇó 1
-  const WxAgreeUserRequestCall3 = $10FFA0;		//Í¬ÒâºÃÓÑÇëÇó 1
-  const WxAgreeUserRequestCall4 = $1D7180;		//Í¬ÒâºÃÓÑÇëÇó 1
-  const WxAgreeUserRequestParam = $1AB2E98;	//Í¬ÒâºÃÓÑÇëÇó 1
+  const WxAgreeUserRequestCall1 = $1F036;		//åŒæ„å¥½å‹è¯·æ±‚ 1
+  const WxAgreeUserRequestCall2 = $5D60;		//åŒæ„å¥½å‹è¯·æ±‚ 1
+  const WxAgreeUserRequestCall3 = $10FFA0;		//åŒæ„å¥½å‹è¯·æ±‚ 1
+  const WxAgreeUserRequestCall4 = $1D7180;		//åŒæ„å¥½å‹è¯·æ±‚ 1
+  const WxAgreeUserRequestParam = $1AB2E98;	//åŒæ„å¥½å‹è¯·æ±‚ 1
 
   callAdd1 := g_baseaddr + WxAgreeUserRequestCall1;
   callAdd2 := g_baseaddr + WxAgreeUserRequestCall2;
@@ -231,7 +231,7 @@ begin
 //	GeneralStruct pWxid(userwxid);
 //	char* asmWxid = (char*)& pWxid.pstr;
 //	char buff[0x3D8] = { 0 };
-//	DWORD userData = 0;		//ÓÃ»§Êı¾İµÄµØÖ·
+//	DWORD userData = 0;		//ç”¨æˆ·æ•°æ®çš„åœ°å€
   asm
 
         pushad;
@@ -250,7 +250,7 @@ begin
         popad;
   end;
   var tempnickname: string;
-  var wxNickAdd := userData + $64;	//êÇ³Æ
+  var wxNickAdd := userData + $64;	//æ˜µç§°
   tempnickname := PChar(wxNickAdd);
 //	swprintf_s(tempnickname, L"%s", (wchar_t*)(*((LPVOID*)wxNickAdd)));
 
@@ -259,21 +259,21 @@ end;
 
 function GetWxid: string;
 begin
-  const wxid_offset = $1ad1fb0;       //Î¢ĞÅid  wx 3.2.1.154
+  const wxid_offset = $1ad1fb0;       //å¾®ä¿¡id  wx 3.2.1.154
   result := PansiChar(g_baseaddr + wxid_offset);
 end;
 
 function GetPhone: string;
 begin
-  const phone_offset = $1ad1b10; //ÊÖ»úºÅ  //wx 3.2.1.154
+  const phone_offset = $1ad1b10; //æ‰‹æœºå·  //wx 3.2.1.154
   result := PansiChar(g_baseaddr + phone_offset);
 end;
 
 function GetHeadUrl: string;
 begin
-  const head_offset = $1ad1e74;     //Í·Ïñ  wx 3.2.1.154
+  const head_offset = $1ad1e74;     //å¤´åƒ  wx 3.2.1.154
   var p1: Nativeuint;
-  p1 := g_baseaddr + head_offset;    //¶ş¼¶Ö¸Õë
+  p1 := g_baseaddr + head_offset;    //äºŒçº§æŒ‡é’ˆ
   result := PansiChar(Pointer((@p1)^)^);
 end;
 
@@ -303,11 +303,11 @@ begin
 end;
 
 function GetSign: string;
-//È¡µÃÇ©Ãû
+//å–å¾—ç­¾å
 var
   NewDest: PChar;
 begin
-  const sign_offset = $1ad1cc8;   //wx 3.2.1.154  ¸öĞÔÇ©Ãû
+  const sign_offset = $1ad1cc8;   //wx 3.2.1.154  ä¸ªæ€§ç­¾å
   GetMem(NewDest, 100);
   var qm_ := PansiChar(g_baseaddr + sign_offset);
   Utf8toUnicode(NewDest, qm_, 100);
@@ -325,7 +325,7 @@ var
   NewDest: PChar;
 begin
 
-  const nickname_len_offset = $1ad1bbc;    //êÇ³Æ³¤¶È   wx 3.2.1.154
+  const nickname_len_offset = $1ad1bbc;    //æ˜µç§°é•¿åº¦   wx 3.2.1.154
   GetMem(Unic, 100);
 
   GetMem(Dest, 100);
@@ -336,19 +336,19 @@ begin
 
     var value: byte;
     value := Length(Dest);
-                                 //Ğ´ÈëÃû×Ö³¤¶È
+                                 //å†™å…¥åå­—é•¿åº¦
     writeprocessmemory(GetCurrentProcess, Pointer(g_baseaddr + nickname_len_offset), @value, 1, lpNumberOfBytesWritten);
   end;
 
 end;
 
 procedure SimulateAClickQr();
-//Ä£Äâµã»÷  ¶şÎ¬Âë
+//æ¨¡æ‹Ÿç‚¹å‡»  äºŒç»´ç 
 begin
   var a: tpoint;
-  GetCursorPos(a);  //È¡µÃÊó±ê×ø±ê,²¢´æ·Å½øaÖĞ
-  var h := FindWindow('WeChatLoginWndForPC', 'Î¢ĞÅ');
-  SetWindowPos(h, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE); //²»ÖÃ¶¥
+  GetCursorPos(a);  //å–å¾—é¼ æ ‡åæ ‡,å¹¶å­˜æ”¾è¿›aä¸­
+  var h := FindWindow('WeChatLoginWndForPC', 'å¾®ä¿¡');
+  SetWindowPos(h, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE); //ä¸ç½®é¡¶
   var point: TPoint;
   point.x := 142;
   point.y := 347;
@@ -361,24 +361,24 @@ begin
 end;
 
 function QrStr: string;
-begin    //µÃµ½¶şÎ¬Âë
+begin    //å¾—åˆ°äºŒç»´ç 
   SimulateAClickQr();
   Sleep(100);
 
 //http://weixin.qq.com/x/g9zQ5WC8Q7Wz0LYSq-_z
   const QrCode_offset = $1ad4568;
-  var DwCall := g_baseaddr + QrCode_offset;    //¶ş¼¶Ö¸Õë
+  var DwCall := g_baseaddr + QrCode_offset;    //äºŒçº§æŒ‡é’ˆ
 
   result := PansiChar(Pointer((@DwCall)^)^);
   result := 'http://weixin.qq.com/x/' + result;
 
-  //  QrCode_offset = $1ad4568; ///wx 3.2.1.154  //¶şÎ¬ÂëµØÖ· ²éÕÒ·½·¨ Î¢ĞÅ¶şÎ¬Âë Í¨¹ı½âÎö ÕÒ³ö ¶ÔÓ¦×Ö·û´®    ÀıÈçA4Om-KvwWb5IhTWlnEXI
-//      ce ËÑË÷A4Om-KvwWb5IhTWlnEXI µÈ´ø¶şÎ¬Âë±ä»¯ ×îÖÕÈ·¶¨Ò»¸öµØÖ·   OD ÖĞDD µØÖ·  ÏÂÄÚ´æĞ´Èë¶Ïµã µÈ´ı    ×îÖÕÈ·ÈÏ ¶ş¼¶Ö¸Õë
+  //  QrCode_offset = $1ad4568; ///wx 3.2.1.154  //äºŒç»´ç åœ°å€ æŸ¥æ‰¾æ–¹æ³• å¾®ä¿¡äºŒç»´ç  é€šè¿‡è§£æ æ‰¾å‡º å¯¹åº”å­—ç¬¦ä¸²    ä¾‹å¦‚A4Om-KvwWb5IhTWlnEXI
+//      ce æœç´¢A4Om-KvwWb5IhTWlnEXI ç­‰å¸¦äºŒç»´ç å˜åŒ– æœ€ç»ˆç¡®å®šä¸€ä¸ªåœ°å€   OD ä¸­DD åœ°å€  ä¸‹å†…å­˜å†™å…¥æ–­ç‚¹ ç­‰å¾…    æœ€ç»ˆç¡®è®¤ äºŒçº§æŒ‡é’ˆ
 
 end;
 
 procedure TmpShield(f: Boolean);
- //ÁÙÊ±Ãâ´òÈÅ
+ //ä¸´æ—¶å…æ‰“æ‰°
 begin
   var lpNumberOfBytesWritten: SIZE_T;
   begin
@@ -395,7 +395,7 @@ begin
 end;
 
 function CheckLogin(): Boolean;
- //¼ì²éµÇÂ¼Óë·ñ
+ //æ£€æŸ¥ç™»å½•ä¸å¦
 begin
   var lpNumberOfBytesWritten: SIZE_T;
 
@@ -414,11 +414,11 @@ begin
 end;
 
 
-//Ìø×ªµ½¶şÎ¬Âë
+//è·³è½¬åˆ°äºŒç»´ç 
 procedure GotoQr();
-  //Ìø×ªµ½¶şÎ¬Âë CE ËÑË÷      ÇĞ»»ÕÊºÅ µØÖ·  odÏÂÄÚ´æĞ´Èë¶Ïµã
+  //è·³è½¬åˆ°äºŒç»´ç  CE æœç´¢      åˆ‡æ¢å¸å· åœ°å€  odä¸‹å†…å­˜å†™å…¥æ–­ç‚¹
 begin
-  const WxGoToQrCode1 = $264830;				//Ìø×ªµ½¶şÎ¬Âë 1
+  const WxGoToQrCode1 = $264830;				//è·³è½¬åˆ°äºŒç»´ç  1
   const WxGoToQrCode2 = $3ADE40;
   var dwCallAddr1 := g_baseaddr + WxGoToQrCode1;
   var dwCallAddr2 := g_baseaddr + WxGoToQrCode2;
@@ -434,7 +434,7 @@ begin
   var  wx_ver3.3.0
   str: string;
 begin
-  const WxGoToQrCode1 = $282160;				//Ìø×ªµ½¶şÎ¬Âë 1
+  const WxGoToQrCode1 = $282160;				//è·³è½¬åˆ°äºŒç»´ç  1
   const WxGoToQrCode2 = $3db5f0;
   var dwCallAddr1 := g_baseaddr + WxGoToQrCode1;
   var dwCallAddr2 := g_baseaddr + WxGoToQrCode2;

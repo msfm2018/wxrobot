@@ -362,18 +362,7 @@ end;
 
 function QrStr: string;
 begin    //得到二维码
-  SimulateAClickQr();
-  Sleep(100);
-
-//http://weixin.qq.com/x/g9zQ5WC8Q7Wz0LYSq-_z
-  const QrCode_offset = $1ad4568;
-  var DwCall := g_baseaddr + QrCode_offset;    //二级指针
-
-  result := PansiChar(Pointer((@DwCall)^)^);
-  result := 'http://weixin.qq.com/x/' + result;
-
-  //  QrCode_offset = $1ad4568; ///wx 3.2.1.154  //二维码地址 查找方法 微信二维码 通过解析 找出 对应字符串    例如A4Om-KvwWb5IhTWlnEXI
-//      ce 搜索A4Om-KvwWb5IhTWlnEXI 等带二维码变化 最终确定一个地址   OD 中DD 地址  下内存写入断点 等待    最终确认 二级指针
+result:='abc';
 
 end;
 

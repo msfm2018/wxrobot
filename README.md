@@ -3,8 +3,9 @@ PC微信hook源码，PC微信注入，逆向编程，可以制作微信机器人
 
 vs2017 与delphi11编译
 wx版本 3.2.1.154
-加群聊
+加群Q聊
+246233219
 
 
 
-![image](https://github.com/msfm2018/wxrobot/blob/main/wxqun.png)
+

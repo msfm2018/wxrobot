@@ -9,3 +9,7 @@ wx版本 3.2.1.154
 
 
 
+开源不易，多谢赞赏，你的一点一滴是我走下去的动力。
+
+
+![image](https://github.com/msfm2018/win_mac_tool/blob/v2.0/index.jpg)

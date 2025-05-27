@@ -1,1 +1,0 @@
-QrCode.dll 二维码插件

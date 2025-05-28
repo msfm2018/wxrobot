@@ -121,7 +121,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_ExeOutput>C:\Users\Administrator\Desktop\test\testpatch\x64\Debug</DCC_ExeOutput>
+        <DCC_ExeOutput>C:\Users\Administrator\Desktop\909090\wxrobot\release</DCC_ExeOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>

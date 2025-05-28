@@ -15,22 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="patch.cpp">
+    <ClCompile Include="mydll.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="fun.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mopen.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="fun.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mopen.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

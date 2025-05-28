@@ -12,10 +12,12 @@ type
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
+    Button5: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -26,6 +28,9 @@ var
   Form1: TForm1;
   function StartWeChatAndInject(dllPath: PWideChar): Integer; stdcall; external 'wxstart.dll';
   function InjectToWeChat(dllPath: PWideChar): Integer; stdcall; external 'wxstart.dll';
+
+  function PatchWeChatDllFile(dllPath: PWideChar): Bool; stdcall; external 'myfilemopen.dll';
+
 implementation
 
 {$R *.dfm}
@@ -70,6 +75,33 @@ end;
 procedure TForm1.Button4Click(Sender: TObject);
 begin
     TriggerPatchFromDelphi( WM_USER + 40518);
+end;
+
+procedure TForm1.Button5Click(Sender: TObject);
+//begin
+//    PatchWeChatDllFile( 'C:\Program Files\Tencent\Weixin\4.0.5.18\Weixin.dll');
+
+    var
+  dlg: TOpenDialog;
+  dllPath: string;
+  result: Bool;
+begin
+  dlg := TOpenDialog.Create(nil);
+  try
+    dlg.Filter := 'DLL Files (*.dll)|*.dll';
+    dlg.InitialDir := 'C:\Program Files\Tencent\Weixin\';
+    if dlg.Execute then
+    begin
+      dllPath := dlg.FileName;
+      result := PatchWeChatDllFile(PWideChar(dllPath));
+      if result then
+        ShowMessage('补丁应用成功！')
+      else
+        ShowMessage('补丁失败或DLL不兼容。');
+    end;
+  finally
+    dlg.Free;
+  end;
 end;
 
 end.

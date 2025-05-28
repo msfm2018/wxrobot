@@ -2,8 +2,8 @@
 #include <cstdio> 
 #include "fun.h"
 
-void PatchRevokeMsg() {
-    // 将 HMODULE 转换为 DWORD_PTR 以兼容64位地址
+void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
+    // 将 HMODULE 转换为 DWORD_PTR 以兼容64位地址 revokemsg
     HMODULE hMod = GetModuleHandle(L"Weixin.dll"); // GetModuleHandle 返回 HMODULE，在64位下是64位的
     if (!hMod) {
         MessageBoxA(NULL, "Failed to get module handle for Weixin.dll", "Patch Error", MB_OK | MB_ICONERROR);
@@ -11,7 +11,7 @@ void PatchRevokeMsg() {
     }
 
     // 计算目标地址。使用 ULONG_PTR 或 DWORD_PTR 来存储地址，确保它是64位的
-    ULONG_PTR patchAddr = (ULONG_PTR)hMod + PATCH_OFFSET;
+    ULONG_PTR patchAddr = (ULONG_PTR)hMod +  PATCH_OFFSET;
 
 
     BYTE patch[] = { 0xB0, 0x00, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3

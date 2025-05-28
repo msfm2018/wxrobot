@@ -11,9 +11,11 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
+    Button4: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -23,16 +25,15 @@ type
 var
   Form1: TForm1;
   function StartWeChatAndInject(dllPath: PWideChar): Integer; stdcall; external 'wxstart.dll';
-function InjectToWeChat(dllPath: PWideChar): Integer; stdcall; external 'wxstart.dll';
+  function InjectToWeChat(dllPath: PWideChar): Integer; stdcall; external 'wxstart.dll';
 implementation
 
 {$R *.dfm}
 
 
-       const
-  WM_EXEC_PATCH = WM_USER + 100;
 
-procedure TriggerPatchFromDelphi;
+
+procedure TriggerPatchFromDelphi(cmd:uint);
 var
   hWnd: thandle;
 begin
@@ -44,13 +45,13 @@ begin
   end;
 
 
-  PostMessage(hWnd, WM_EXEC_PATCH, 0, 0);
+  PostMessage(hWnd, cmd, 0, 0);
 
 
 end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  TriggerPatchFromDelphi
+  TriggerPatchFromDelphi( WM_USER + 40517);
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -63,6 +64,12 @@ var DllPath:string;
 begin
          DllPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'wxpatch.dll';
 InjectToWeChat(pchar(DllPath));
+button3.Enabled:=false;
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+    TriggerPatchFromDelphi( WM_USER + 40518);
 end;
 
 end.

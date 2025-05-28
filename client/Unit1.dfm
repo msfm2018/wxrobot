@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = #38450#25764#22238#34917#19969'   '#29256#26412'  4.0.5.17'
+  Caption = #38450#25764#22238#34917#19969'   '
   ClientHeight = 441
   ClientWidth = 624
   Color = clBtnFace
@@ -12,30 +12,39 @@ object Form1: TForm1
   Font.Style = []
   TextHeight = 15
   object Button1: TButton
-    Left = 280
+    Left = 248
     Top = 320
-    Width = 75
+    Width = 153
     Height = 25
-    Caption = #34917#19969
+    Caption = #34917#19969#36825#20010#29256#26412'  4.0.5.17'
     TabOrder = 0
     OnClick = Button1Click
   end
   object Button2: TButton
-    Left = 280
+    Left = 184
     Top = 232
-    Width = 75
+    Width = 273
     Height = 25
-    Caption = #21551#21160'wx'
+    Caption = #21551#21160'wx '#24182#30331#24405
     TabOrder = 1
     OnClick = Button2Click
   end
   object Button3: TButton
-    Left = 280
+    Left = 256
     Top = 272
-    Width = 75
+    Width = 129
     Height = 25
-    Caption = #27880#20837
+    Caption = #31532#20108#27493'2'#65039#8419#20934#22791#25968#25454
     TabOrder = 2
     OnClick = Button3Click
+  end
+  object Button4: TButton
+    Left = 248
+    Top = 368
+    Width = 153
+    Height = 25
+    Caption = #34917#19969' '#36825#20010#29256#26412'4.0.5.18'
+    TabOrder = 3
+    OnClick = Button4Click
   end
 end

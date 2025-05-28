@@ -2,7 +2,8 @@
 #include <cstdio> 
 #include "fun.h"
 
-#define WM_EXEC_PATCH (WM_USER + 100)
+#define WM_EXEC_PATCH_40517 (WM_USER + 40517)
+#define WM_EXEC_PATCH_40518 (WM_USER + 40518)
 HWND g_hMsgWnd = NULL;
 
 
@@ -10,8 +11,11 @@ HWND g_hMsgWnd = NULL;
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    if (message == WM_EXEC_PATCH) {
-        PatchRevokeMsg();  // 收到消息后执行
+    if (message == WM_EXEC_PATCH_40517) {
+        PatchRevokeMsg(PATCH_OFFSET40517);  // 收到消息后执行
+        return 0;
+    }else   if (message == WM_EXEC_PATCH_40518) {
+        PatchRevokeMsg(PATCH_OFFSET40518);  // 收到消息后执行
         return 0;
     }
     return DefWindowProc(hWnd, message, wParam, lParam);

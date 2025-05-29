@@ -99,68 +99,157 @@ namespace WpfAppMultiPatch
             }
         }
 
+        private const string ConfigFileName = "wechat_path.txt";
+
+
         private void BtnLaunchWeChat_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-               
-                int result = StartWeChatAndInject(""); // Passing empty string as in Delphi
-                if (result == 0) // Assuming 0 means success, adjust if needed
+                string weChatPath = GetSavedWeChatPath();
+
+                // 如果没有保存路径，或者路径文件不存在，就让用户选择
+                if (string.IsNullOrEmpty(weChatPath) || !File.Exists(weChatPath))
                 {
-
-
-                    try
+                    Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
                     {
-                        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                        string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
+                        Title = "请选择 Weixin.exe",
+                        Filter = "微信程序|Weixin.exe",
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
+                    };
 
-                        if (!File.Exists(dllPath))
-                        {
-                            MessageBox.Show($"错误：未找到 wxpatch.dll于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
-
-                        int result1 = InjectToWeChat(dllPath);
-                        if (result1 == 0)
-                        {
-                            MessageBox.Show("启动微信。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                         
-                        }
-                        else
-                        {
-                            MessageBox.Show($"InjectToWeChat 返回: {result1}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
-
-                    }
-                    catch (DllNotFoundException)
+                    if (openFileDialog.ShowDialog() == true)
                     {
-                        MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        weChatPath = openFileDialog.FileName;
+                        SaveWeChatPath(weChatPath);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        MessageBox.Show($"准备数据（注入 wxpatch.dll）时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("未选择 Weixin.exe，操作已取消。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
                     }
+                }
 
+                // 启动微信进程
+                Process weChatProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = weChatPath,
+                        UseShellExecute = false
+                    }
+                };
 
+                weChatProcess.Start();
+
+                // 等待微信加载
+                Thread.Sleep(2000);
+
+                // 注入 DLL
+                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
+
+                if (!File.Exists(dllPath))
+                {
+                    MessageBox.Show($"错误：未找到 wxpatch.dll 于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                int result = InjectToWeChat(dllPath);
+                if (result == 0)
+                {
+                    MessageBox.Show("微信已启动。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show($"StartWeChatAndInject 返回: {result}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"InjectToWeChat 返回: {result}", "注入失败", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (DllNotFoundException)
             {
-                MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("错误：未找到 wxstart.dll。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-           
-        
         }
 
-       
+        private string GetSavedWeChatPath()
+        {
+            string configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
+            return File.Exists(configPath) ? File.ReadAllText(configPath).Trim() : string.Empty; // Replace null with string.Empty
+        }
+
+        private void SaveWeChatPath(string path)
+        {
+            string configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
+            File.WriteAllText(configPath, path);
+        }
+
+
+        //private void BtnLaunchWeChat_Click(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+
+        //        int result = StartWeChatAndInject(""); // Passing empty string as in Delphi
+        //        if (result == 0) // Assuming 0 means success, adjust if needed
+        //        {
+
+
+        //            try
+        //            {
+        //                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        //                string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
+
+        //                if (!File.Exists(dllPath))
+        //                {
+        //                    MessageBox.Show($"错误：未找到 wxpatch.dll于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
+        //                    return;
+        //                }
+
+        //                int result1 = InjectToWeChat(dllPath);
+        //                if (result1 == 0)
+        //                {
+        //                    MessageBox.Show("启动微信。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        //                }
+        //                else
+        //                {
+        //                    MessageBox.Show($"InjectToWeChat 返回: {result1}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //                }
+
+        //            }
+        //            catch (DllNotFoundException)
+        //            {
+        //                MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                MessageBox.Show($"准备数据（注入 wxpatch.dll）时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //            }
+
+
+        //        }
+        //        else
+        //        {
+        //            MessageBox.Show($"StartWeChatAndInject 返回: {result}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //        }
+        //    }
+        //    catch (DllNotFoundException)
+        //    {
+        //        MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+
+
+        //}
+
+
 
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {

@@ -1,13 +1,13 @@
 #### 应用截图
 <p align="center">
-  <img src="https://github.com/msfm2018/wxrobot/blob/4.0.5.18v3/index.png?raw=true">
+  <img src="https://github.com/msfm2018/wxrobot/blob/4.0.5.18v4/index.png?raw=true">
 </p>
 
 
 wx 最新版本 4.0.5.17 
 
 
-# wx 最新版本 4.0.5.18 
+# wx 最新版本 4.0.5.18   版本号规则 38312E352E302E34   
 
 
 #消息防撤回补丁

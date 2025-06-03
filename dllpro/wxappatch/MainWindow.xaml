@@ -92,7 +92,7 @@
     <Grid Margin="15">
         <StackPanel Orientation="Vertical">
 
-            <Label Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>
+            <Label x:Name="VersionLabel" Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>
             <Button x:Name="BtnMultiInstancePatch" Content="多开文件补丁 4.0.5.18" Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch_Click"/>
             <Button x:Name="BtnLaunchWeChat" Content="启动微信" Style="{StaticResource MainButtonStyle}" Click="BtnLaunchWeChat_Click"/>
            

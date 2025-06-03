@@ -1,8 +1,0 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(524,5): warning MSB8004: Output 目录未以斜杠结尾。  此生成实例将添加斜杠，因为必须有这个斜杠才能正确计算 Output 目录。
-  mydll.cpp
-    正在创建库 ..\..\release\myfilemopen.lib 和对象 ..\..\release\myfilemopen.exp
-  正在生成代码
-  Previous IPDB not found, fall back to full compilation.
-  All 121 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  已完成代码的生成
-  filemopen.vcxproj -> C:\Users\Administrator\Desktop\555555555555555555555\wxrobot\release\myfilemopen.dll

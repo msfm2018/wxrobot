@@ -1,4 +1,10 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Win32; // Required for OpenFileDialog
+using MultiWeixin.Assist;
+using System;
+using System.Diagnostics;
+using System.IO;       // Required for Path operations
+using System.Reflection; // Required for Assembly.GetExecutingAssembly()
+using System.Runtime.InteropServices; // Required for DllImport
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,12 +15,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
-using Microsoft.Win32; // Required for OpenFileDialog
-using System;
-using System.IO;       // Required for Path operations
-using System.Reflection; // Required for Assembly.GetExecutingAssembly()
-using System.Runtime.InteropServices; // Required for DllImport
 
 namespace WpfAppMultiPatch
 {
@@ -40,6 +40,28 @@ namespace WpfAppMultiPatch
 
         private const uint WM_USER = 0x0400;
 
+        private const string RegistRoot = @"HKEY_CURRENT_USER\Software\Tencent";
+        private const string WeixinSubKey = "Weixin";
+        string installPath = "";
+
+        private static string GetValue(string subKey, string valueName)
+        {
+            var fullName = $"{RegistRoot}\\{subKey}";
+            object value = Registry.GetValue(fullName, valueName, null)!;
+
+            string result = value switch
+            {
+                // 关键修复：将DWORD转为无符号再转字符串
+                int dword => unchecked((uint)dword).ToString(),
+                string str => str,
+                byte[] bytes when bytes.Length == 4 =>
+                    BitConverter.ToUInt32(bytes, 0).ToString(), // 处理二进制格式DWORD
+                _ => string.Empty
+            };
+
+            return result;
+        }
+
         private void TriggerPatch(uint cmd)
         {
             IntPtr hWnd = FindWindow("RevokePatchMsgWnd", string.Empty); // Replace null with string.Empty
@@ -55,48 +77,78 @@ namespace WpfAppMultiPatch
         public MainWindow()
         {
             InitializeComponent();
+            this.Loaded += MainWindow_Loaded;
         }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var wxVersionStr = GetValue(WeixinSubKey, "Version");
+            installPath = GetValue(WeixinSubKey, "InstallPath");
+
+            if (string.IsNullOrWhiteSpace(wxVersionStr))
+            {
+                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string decodedVersion;
+            try
+            {
+                decodedVersion = new VersionCodec(encodedVersion).ToString();
+                VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+        }
+
+        public void TryPatchWeChatDll(string wxVersionStr)
+        {
+
+
+            if (string.IsNullOrWhiteSpace(wxVersionStr) || string.IsNullOrWhiteSpace(installPath))
+            {
+                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string dllPath = $@"{installPath}\{wxVersionStr}\Weixin.dll";
+
+            if (!File.Exists(dllPath))
+            {
+                MessageBox.Show($"未找到 Weixin.dll 文件：{dllPath}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                if (PatchWeChatDllFile(dllPath))
+                {
+                    MessageBox.Show("补丁应用成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("补丁失败或DLL不兼容。", "失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"补丁过程中发生异常：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
         private void BtnMultiInstancePatch_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog
-            {
-                Filter = "DLL Files (*.dll)|*.dll",
-                Title = "请选择要修补的 Weixin.dll 文件",
-                InitialDirectory = @"C:\Program Files\Tencent\Weixin\" // Or Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
-            };
-            // Attempt to set a more robust initial directory
-            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            string weixinDir = System.IO.Path.Combine(programFiles, @"Tencent\Weixin\");
-            if (Directory.Exists(weixinDir))
-            {
-                dlg.InitialDirectory = weixinDir;
-            }
-
-
-            if (dlg.ShowDialog() == true)
-            {
-                string dllPath = dlg.FileName;
-                try
-                {
-                    if (PatchWeChatDllFile(dllPath))
-                    {
-                        MessageBox.Show("补丁应用成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("补丁失败或DLL不兼容。", "失败", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-                catch (DllNotFoundException)
-                {
-                    MessageBox.Show("错误：myfilemopen.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"应用补丁时发生未知错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
+            TryPatchWeChatDll("4.0.5.18");
         }
 
         private const string ConfigFileName = "wechat_path.txt";
@@ -106,36 +158,37 @@ namespace WpfAppMultiPatch
         {
             try
             {
-                string weChatPath = GetSavedWeChatPath();
+                //string weChatPath = GetSavedWeChatPath();
 
-                // 如果没有保存路径，或者路径文件不存在，就让用户选择
-                if (string.IsNullOrEmpty(weChatPath) || !File.Exists(weChatPath))
-                {
-                    Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
-                    {
-                        Title = "请选择 Weixin.exe",
-                        Filter = "微信程序|Weixin.exe",
-                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
-                    };
+                //// 如果没有保存路径，或者路径文件不存在，就让用户选择
+                //if (string.IsNullOrEmpty(weChatPath) || !File.Exists(weChatPath))
+                //{
+                //    Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
+                //    {
+                //        Title = "请选择 Weixin.exe",
+                //        Filter = "微信程序|Weixin.exe",
+                //        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
+                //    };
 
-                    if (openFileDialog.ShowDialog() == true)
-                    {
-                        weChatPath = openFileDialog.FileName;
-                        SaveWeChatPath(weChatPath);
-                    }
-                    else
-                    {
-                        MessageBox.Show("未选择 Weixin.exe，操作已取消。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-                }
+                //    if (openFileDialog.ShowDialog() == true)
+                //    {
+                //        weChatPath = openFileDialog.FileName;
+                //        SaveWeChatPath(weChatPath);
+                //    }
+                //    else
+                //    {
+                //        MessageBox.Show("未选择 Weixin.exe，操作已取消。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                //        return;
+                //    }
+                //}
 
                 // 启动微信进程
                 Process weChatProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = weChatPath,
+                        //FileName = weChatPath,
+                        FileName = installPath + @"\Weixin.exe",
                         UseShellExecute = false
                     }
                 };

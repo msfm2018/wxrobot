@@ -15,6 +15,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Text.Json;
+using System.Text.Json.Serialization; // Don't forget this using directive
+
+public class PatchInfo
+{
+    //[JsonConverter(typeof(HexStringToIntArrayConverter))]
+    public string position { get; set; }
+}
+
 
 namespace WpfAppMultiPatch
 {
@@ -30,7 +39,15 @@ namespace WpfAppMultiPatch
 
         [DllImport("myfilemopen.dll", CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool PatchWeChatDllFile(string dllPath);
+
+        public static extern bool ApplyPatchToFile(
+        [MarshalAs(UnmanagedType.LPWStr)] string dllPath, // wchar_t* 对应 C# 的 string，需要 MarshalAs 指定类型
+         [MarshalAs(UnmanagedType.LPWStr)] string patchData 
+  
+    );
+
+   
+
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -43,6 +60,7 @@ namespace WpfAppMultiPatch
         private const string RegistRoot = @"HKEY_CURRENT_USER\Software\Tencent";
         private const string WeixinSubKey = "Weixin";
         string installPath = "";
+        string decodedVersion="";
 
         private static string GetValue(string subKey, string valueName)
         {
@@ -97,7 +115,7 @@ namespace WpfAppMultiPatch
                 return;
             }
 
-            string decodedVersion;
+       
             try
             {
                 decodedVersion = new VersionCodec(encodedVersion).ToString();
@@ -110,7 +128,8 @@ namespace WpfAppMultiPatch
             }
         }
 
-        public void TryPatchWeChatDll(string wxVersionStr)
+      
+            public void TryPatchWeChatDll(string wxVersionStr, string patchData)
         {
 
 
@@ -130,7 +149,8 @@ namespace WpfAppMultiPatch
 
             try
             {
-                if (PatchWeChatDllFile(dllPath))
+             
+                if (ApplyPatchToFile(dllPath, patchData))
                 {
                     MessageBox.Show("补丁应用成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -148,7 +168,22 @@ namespace WpfAppMultiPatch
 
         private void BtnMultiInstancePatch_Click(object sender, RoutedEventArgs e)
         {
-            TryPatchWeChatDll("4.0.5.18");
+            var config = LoadPatchConfig();
+            if (config == null)
+                return;
+
+            if (!config.TryGetValue(decodedVersion, out PatchInfo? patchInfo) || patchInfo == null)
+            {
+                MessageBox.Show($"未在配置中找到版本 {decodedVersion} 的补丁信息。", "版本不支持", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+      
+            TryPatchWeChatDll(decodedVersion, patchInfo.position);
+
+            //TryPatchWeChatDll(decodedVersion, patchInfo.position);
+            //decodedVersion  patch_config.json
+            //TryPatchWeChatDll("4.0.5.18");
         }
 
         private const string ConfigFileName = "wechat_path.txt";
@@ -158,29 +193,6 @@ namespace WpfAppMultiPatch
         {
             try
             {
-                //string weChatPath = GetSavedWeChatPath();
-
-                //// 如果没有保存路径，或者路径文件不存在，就让用户选择
-                //if (string.IsNullOrEmpty(weChatPath) || !File.Exists(weChatPath))
-                //{
-                //    Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
-                //    {
-                //        Title = "请选择 Weixin.exe",
-                //        Filter = "微信程序|Weixin.exe",
-                //        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
-                //    };
-
-                //    if (openFileDialog.ShowDialog() == true)
-                //    {
-                //        weChatPath = openFileDialog.FileName;
-                //        SaveWeChatPath(weChatPath);
-                //    }
-                //    else
-                //    {
-                //        MessageBox.Show("未选择 Weixin.exe，操作已取消。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                //        return;
-                //    }
-                //}
 
                 // 启动微信进程
                 Process weChatProcess = new Process
@@ -241,71 +253,45 @@ namespace WpfAppMultiPatch
         }
 
 
-        //private void BtnLaunchWeChat_Click(object sender, RoutedEventArgs e)
-        //{
-        //    try
-        //    {
+        private Dictionary<string, PatchInfo>? LoadPatchConfig()
+        {
+            try
+            {
+                string jsonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "patch_config.json");
+                if (!File.Exists(jsonPath))
+                {
+                    MessageBox.Show("未找到配置文件 patch_config.json", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return null;
+                }
 
-        //        int result = StartWeChatAndInject(""); // Passing empty string as in Delphi
-        //        if (result == 0) // Assuming 0 means success, adjust if needed
-        //        {
+                string jsonContent = File.ReadAllText(jsonPath);
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var config = JsonSerializer.Deserialize<Dictionary<string, PatchInfo>>(jsonContent, options);
 
-
-        //            try
-        //            {
-        //                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        //                string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
-
-        //                if (!File.Exists(dllPath))
-        //                {
-        //                    MessageBox.Show($"错误：未找到 wxpatch.dll于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
-        //                    return;
-        //                }
-
-        //                int result1 = InjectToWeChat(dllPath);
-        //                if (result1 == 0)
-        //                {
-        //                    MessageBox.Show("启动微信。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
-
-        //                }
-        //                else
-        //                {
-        //                    MessageBox.Show($"InjectToWeChat 返回: {result1}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //                }
-
-        //            }
-        //            catch (DllNotFoundException)
-        //            {
-        //                MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                MessageBox.Show($"准备数据（注入 wxpatch.dll）时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //            }
-
-
-        //        }
-        //        else
-        //        {
-        //            MessageBox.Show($"StartWeChatAndInject 返回: {result}", "操作提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //        }
-        //    }
-        //    catch (DllNotFoundException)
-        //    {
-        //        MessageBox.Show("错误：wxstart.dll 未找到。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-
-
-        //}
-
+                return config;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"读取配置文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
+            }
+        }
 
 
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {
+            if (decodedVersion== "4.0.5.17")
+            {
+                TriggerPatch(WM_USER + 40517);
+            }
+            else if (decodedVersion == "4.0.5.18")
+            {
+                TriggerPatch(WM_USER + 40518);
+            }
+            else if (decodedVersion == "4.0.5.23")
+            {
+                TriggerPatch(WM_USER + 40523);
+            }
             TriggerPatch(WM_USER + 40517);
             MessageBox.Show("补丁 1 命令已发送。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
 

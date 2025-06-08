@@ -21,9 +21,6 @@
     <ClCompile Include="fun.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="mopen.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fun.h">

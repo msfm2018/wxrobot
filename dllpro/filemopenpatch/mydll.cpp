@@ -2,17 +2,45 @@
 #include <cstdio>
 #include <vector>
 #include <string>
-//wx 4.0.5.18 版本
-// Weixin.dll 补丁：去除互斥锁检查和窗口检查
-// 补丁功能：
-// 1. 去除互斥锁检查，允许多实例运行
-// 2. 去除窗口检查，允许多实例运行
-// // 注意：请确保在 Weixin.dll 文件未被其他进程占用时运行此补丁程序。
-// // 注意：此补丁仅适用于特定版本的 Weixin.dll，可能不适用于其他版本或更新。
-// // 免责声明：使用此补丁可能违反软件使用条款，请自行承担风险。
-// // 版权声明：此代码仅供学习和研究使用，未经允许不得用于商业用途。
-// // 版本信息：
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iomanip>
 
+// 定义 BYTE 为 unsigned char（如果未使用 windows.h）
+typedef unsigned char BYTE;
+
+// 将宽字符字符串解析为 BYTE 数组
+void ParseWCharHexStringToByteArray(const wchar_t* hexString, BYTE* outArray, size_t& outSize) {
+    std::vector<BYTE> temp; // 临时存储解析结果
+    std::wstringstream ss(hexString);
+    std::wstring token;
+
+    // 按逗号分隔字符串
+    while (std::getline(ss, token, L',')) {
+        // 去除可能的空格和 "0x" 前缀
+        token.erase(std::remove_if(token.begin(), token.end(), iswspace), token.end());
+        if (token.substr(0, 2) == L"0x" || token.substr(0, 2) == L"0X") {
+            token = token.substr(2);
+        }
+
+        // 将十六进制字符串转换为整数
+        unsigned int value;
+        std::wstringstream hexStream(token);
+        hexStream >> std::hex >> value;
+
+        // 确保值在 BYTE 范围内 (0-255)
+        if (value <= 0xFF) {
+            temp.push_back(static_cast<BYTE>(value));
+        }
+    }
+
+    // 将临时结果复制到输出数组
+    outSize = temp.size();
+    for (size_t i = 0; i < outSize; ++i) {
+        outArray[i] = temp[i];
+    }
+}
 // 
 // 搜索二进制特征码并返回匹配的文件偏移
 LONGLONG FindPattern(const std::vector<BYTE>& fileData, const BYTE* pattern, size_t patternSize) {
@@ -31,7 +59,14 @@ LONGLONG FindPattern(const std::vector<BYTE>& fileData, const BYTE* pattern, siz
     return -1;
 }
 
-extern "C" __declspec(dllexport) bool __stdcall  PatchWeChatDllFile(const wchar_t* dllPath) {
+
+    extern "C" __declspec(dllexport) bool ApplyPatchToFile(const wchar_t* dllPath, const wchar_t* hexString) {
+   
+      
+        BYTE tempArray[256]; // 假设最大 256 个字节，足够容纳输入
+        size_t arraySize = 0;
+        ParseWCharHexStringToByteArray(hexString, tempArray, arraySize);
+
     // 打开 Weixin.dll 文件
     HANDLE hFile = CreateFileW(dllPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -99,9 +134,13 @@ extern "C" __declspec(dllexport) bool __stdcall  PatchWeChatDllFile(const wchar_
     }
 
     // 可选：补丁窗口检查（xWechatWindow）
-    BYTE windowPattern[] = { 0xE8, 0x67, 0x2C, 0x4E, 0x00 }; // call weixin.7FFC6802CBA0
-    size_t windowPatternSize = sizeof(windowPattern);
-    LONGLONG windowPatchOffset = FindPattern(fileData, windowPattern, windowPatternSize);
+    //BYTE windowPattern[] = { 0xE8, 0x67, 0x2C, 0x4E, 0x00 }; // call weixin.7FFC6802CBA0
+    //BYTE windowPattern[] = { 0xE8, 0x87, 0x27, 0x4E, 0x00 }; // call weixin.7FFC6802CBA0
+
+    LONGLONG windowPatchOffset = FindPattern(fileData, tempArray, arraySize);
+
+
+
     if (windowPatchOffset != -1) {
         BYTE windowPatch[] = { 0x31, 0xC0, 0x90, 0x90, 0x90 }; // xor eax, eax; nop; nop; nop
         liOffset.QuadPart = windowPatchOffset;

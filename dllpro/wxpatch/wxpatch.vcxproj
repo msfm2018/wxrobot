@@ -131,7 +131,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="fun.cpp" />
-    <ClCompile Include="mopen.cpp" />
     <ClCompile Include="patch.cpp" />
   </ItemGroup>
   <ItemGroup>

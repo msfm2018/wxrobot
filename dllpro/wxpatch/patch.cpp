@@ -6,6 +6,7 @@
 #define WM_EXEC_PATCH_40517 (WM_USER + 40517)
 #define WM_EXEC_PATCH_40518 (WM_USER + 40518+0)
 #define WM_EXEC_PATCH_40523 (WM_USER + 40523)
+#define WM_EXEC_PATCH_40526 (WM_USER + 40526)
 
 HWND g_hMsgWnd = NULL;
 
@@ -23,6 +24,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     }
     else   if (message == WM_EXEC_PATCH_40523) {
         PatchRevokeMsg(PATCH_OFFSET40523);  // 收到消息后执行
+        return 0;
+    }
+    else   if (message == WM_EXEC_PATCH_40526) {
+        PatchRevokeMsg(PATCH_OFFSET40526);  // 收到消息后执行
         return 0;
     }
    

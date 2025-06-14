@@ -181,9 +181,7 @@ namespace WpfAppMultiPatch
       
             TryPatchWeChatDll(decodedVersion, patchInfo.position);
 
-            //TryPatchWeChatDll(decodedVersion, patchInfo.position);
-            //decodedVersion  patch_config.json
-            //TryPatchWeChatDll("4.0.5.18");
+     
         }
 
         private const string ConfigFileName = "wechat_path.txt";
@@ -223,7 +221,7 @@ namespace WpfAppMultiPatch
                 int result = InjectToWeChat(dllPath);
                 if (result == 0)
                 {
-                    MessageBox.Show("微信已启动。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("微信已启动。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
@@ -239,20 +237,6 @@ namespace WpfAppMultiPatch
                 MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        private string GetSavedWeChatPath()
-        {
-            string configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
-            return File.Exists(configPath) ? File.ReadAllText(configPath).Trim() : string.Empty; // Replace null with string.Empty
-        }
-
-        private void SaveWeChatPath(string path)
-        {
-            string configPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigFileName);
-            File.WriteAllText(configPath, path);
-        }
-
-
         private Dictionary<string, PatchInfo>? LoadPatchConfig()
         {
             try
@@ -277,33 +261,41 @@ namespace WpfAppMultiPatch
             }
         }
 
+        uint ConvertVersionToNumber(string version)
+        {
+            // 假设格式始终是 major.minor.build.revision
+            var parts = version.Split('.');
+            if (parts.Length != 4)
+                throw new FormatException("Invalid version format");
+
+            return uint.Parse(parts[0]) * 10000u +
+                   uint.Parse(parts[1]) * 1000u +
+                   uint.Parse(parts[2]) * 100u +
+                   uint.Parse(parts[3]);
+        }
 
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {
-            if (decodedVersion== "4.0.5.17")
-            {
-                TriggerPatch(WM_USER + 40517);
-            }
-            else if (decodedVersion == "4.0.5.18")
-            {
-                TriggerPatch(WM_USER + 40518);
-            }
-            else if (decodedVersion == "4.0.5.23")
-            {
-                TriggerPatch(WM_USER + 40523);
-            }
-            TriggerPatch(WM_USER + 40517);
-            MessageBox.Show("补丁 1 命令已发送。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            uint versionNumber = ConvertVersionToNumber(decodedVersion);
+            TriggerPatch(WM_USER + versionNumber);
+            //if (decodedVersion== "4.0.5.17")
+            //{
+            //    TriggerPatch(WM_USER + 40517);
+            //}
+            //else if (decodedVersion == "4.0.5.18")
+            //{
+            //    TriggerPatch(WM_USER + 40518);
+            //}
+            //else if (decodedVersion == "4.0.5.23")
+            //{
+            //    TriggerPatch(WM_USER + 40523);
+            //}
+
+            MessageBox.Show("补丁 已打。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
 
   
         }
 
-        private void BtnPatch2_Click(object sender, RoutedEventArgs e)
-        {
-            TriggerPatch(WM_USER + 40518);
-            MessageBox.Show("补丁 2 命令已发送。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
-
-     
-        }
+   
     }
 }

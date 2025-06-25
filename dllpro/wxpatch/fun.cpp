@@ -22,7 +22,7 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
         memcpy((void*)patchAddr, patch, sizeof(patch));
         VirtualProtect((LPVOID)patchAddr, sizeof(patch), oldProtect, &oldProtect);
 
-       // MessageBoxA(NULL, "PatchRevokeMsg executed successfully!", "Success", MB_OK | MB_ICONINFORMATION);
+      //  MessageBoxA(NULL, "PatchRevokeMsg executed successfully!", "Success", MB_OK | MB_ICONINFORMATION);
     }
     else {
         // »ñÈ¡´íÎó´úÂë

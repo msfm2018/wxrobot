@@ -18,4 +18,7 @@
 #define PATCH_OFFSET40617 0x8F3BB5 // For Weixin 4.0.6.13 (for 64-bit)
 #define PATCH_OFFSET406170 0x8F3C3F // For Weixin 4.0.6.13 (for 64-bit) QIYE
    
+#define PATCH_OFFSET40621 0x8F4675 // For Weixin 4.0.6.13 (for 64-bit)
+#define PATCH_OFFSET406210 0x8F46FF // For Weixin 4.0.6.13 (for 64-bit) QIYE
+
 void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET);

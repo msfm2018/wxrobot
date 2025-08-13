@@ -215,7 +215,50 @@ extern "C" __declspec(dllexport) int StartWeChatAndInject(const wchar_t* dllPath
     return 0;
 }
 
+
+std::vector<DWORD> FindAllProcessIds(const std::wstring& processName) {
+    std::vector<DWORD> pids;
+    PROCESSENTRY32W entry;
+    entry.dwSize = sizeof(PROCESSENTRY32W);
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        return pids;
+    }
+
+    if (Process32FirstW(snapshot, &entry)) {
+        do {
+            if (!_wcsicmp(entry.szExeFile, processName.c_str())) {
+                pids.push_back(entry.th32ProcessID);
+            }
+        } while (Process32NextW(snapshot, &entry));
+    }
+    CloseHandle(snapshot);
+    return pids;
+}
+
+
 extern "C" __declspec(dllexport) int InjectToWeChat(const wchar_t* dllPath) {
+    auto pids = FindAllProcessIds(L"Weixin.exe");
+    if (pids.empty()) {
+        MessageBoxW(NULL, L"WeChat process (Weixin.exe) not found.", L"Injection Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    bool allOk = true;
+    for (DWORD pid : pids) {
+        InjectDLL(pid, dllPath);
+        //if (!InjectDLL(pid, dllPath)) {
+        //    allOk = false;
+        //    // 这里可以选择是否遇到失败就提前退出
+        //    // return 2;
+        //}
+    }
+
+    return allOk ? 0 : 2;
+}
+
+extern "C" __declspec(dllexport) int InjectToWeChat2(const wchar_t* dllPath) {
     DWORD pid = FindProcessId(L"Weixin.exe"); 
     if (pid == 0) {
         MessageBoxW(NULL, L"WeChat process (Weixin.exe) not found.", L"Injection Error", MB_OK | MB_ICONERROR);

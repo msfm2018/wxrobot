@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfAppMultiPatch"
         mc:Ignorable="d"
-        Title="微信多开及补丁工具" Height="450" Width="350"
+        Title="微信多开及补丁工具" Height="614" Width="350"
         WindowStartupLocation="CenterScreen"
         Background="#FFEAEAEA">
     <Window.Resources>
@@ -101,6 +101,11 @@
 
             <Label Content="扩展补丁" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
             <Button x:Name="BtnPatch1" Content="防撤回补丁" Style="{StaticResource PatchButtonStyle}" Click="BtnPatch1_Click"/>
+
+            <!-- 4.1 栏 -->
+            <Separator Margin="0,20"/>
+            <Label Content="4.1 栏" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
+            <Button x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 (4.1)" Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
 
         </StackPanel>
     </Grid>

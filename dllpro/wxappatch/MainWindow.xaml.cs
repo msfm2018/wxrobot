@@ -62,6 +62,27 @@ namespace WpfAppMultiPatch
         string installPath = "";
         string decodedVersion="";
 
+        private  string DecodeFromInteger4(uint encodedVersion)
+        {
+            int encodedMajor = (int)((encodedVersion >> 24) & 0xFF);
+            int encodedMinor = (int)((encodedVersion >> 16) & 0xFF);
+            int encodedBuild = (int)((encodedVersion >> 8) & 0xFF);
+            int encodedRevision = (int)(encodedVersion & 0xFF);
+
+            var Major = encodedMajor - 238;
+            var Minor = encodedMinor - 83;
+
+            // 特殊规则：Build = 0x10 时表示 0
+            var Build = (encodedBuild == 0x10) ? 0 : encodedBuild;
+
+            var Revision = encodedRevision;
+
+            if (Major < 0 || Minor < 0)
+            {
+                throw new ArgumentException("解码后的 Major 或 Minor 为负数，无效的编码版本号");
+            }
+            return $"{Major}.{Minor}.{Build}.{Revision}";
+        }
         private static string GetValue(string subKey, string valueName)
         {
             var fullName = $"{RegistRoot}\\{subKey}";
@@ -71,6 +92,7 @@ namespace WpfAppMultiPatch
             {
                 // 关键修复：将DWORD转为无符号再转字符串
                 int dword => unchecked((uint)dword).ToString(),
+                long qword => new VersionCodec(unchecked((uint)qword)).ToString(),
                 string str => str,
                 byte[] bytes when bytes.Length == 4 =>
                     BitConverter.ToUInt32(bytes, 0).ToString(), // 处理二进制格式DWORD
@@ -97,35 +119,52 @@ namespace WpfAppMultiPatch
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
         }
+        string DecodeVersion(uint version)
+        {
+            byte v1 = (byte)((version >> 24) & 0xFF);
+            byte v2 = (byte)((version >> 16) & 0xFF);
+            byte v3 = (byte)((version >> 8) & 0xFF);
+            byte v4 = (byte)(version & 0xFF);
+
+            // 微信的规则：高位两个字节需要映射
+            // if (v1 == 0xF2) v1 = 4;
+            // if (v2 == 0x54) v2 = 1;
+            return $"{v1}.{v2}.{v3}.{v4}";
+           // return $"{v1}.{v2}.{v3}.{v4}";
+        }
+
+
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var wxVersionStr = GetValue(WeixinSubKey, "Version");
-            installPath = GetValue(WeixinSubKey, "InstallPath");
+         
+            //var wxVersionStr = GetValue(WeixinSubKey, "Version");
+            //installPath = GetValue(WeixinSubKey, "InstallPath");
 
-            if (string.IsNullOrWhiteSpace(wxVersionStr))
-            {
-                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            //if (string.IsNullOrWhiteSpace(wxVersionStr))
+            //{
+            //    MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return;
+            //}
 
-            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
-            {
-                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            //if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
+            //{
+            //    MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return;
+            //}
 
        
-            try
-            {
-                decodedVersion = new VersionCodec(encodedVersion).ToString();
-                VersionLabel.Content = $"wx版本号：{decodedVersion}";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            //try
+            //{
+            //    decodedVersion = new VersionCodec(encodedVersion).ToString();
+            
+            //    VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return;
+            //}
         }
 
       
@@ -168,6 +207,36 @@ namespace WpfAppMultiPatch
 
         private void BtnMultiInstancePatch_Click(object sender, RoutedEventArgs e)
         {
+            var wxVersionStr = GetValue(WeixinSubKey, "Version");
+            installPath = GetValue(WeixinSubKey, "InstallPath");
+
+            if (string.IsNullOrWhiteSpace(wxVersionStr))
+            {
+                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+            try
+            {
+                decodedVersion = new VersionCodec(encodedVersion).ToString();
+
+                VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+
             var config = LoadPatchConfig();
             if (config == null)
                 return;
@@ -191,7 +260,7 @@ namespace WpfAppMultiPatch
         {
             try
             {
-
+                installPath = GetValue(WeixinSubKey, "InstallPath");
                 // 启动微信进程
                 Process weChatProcess = new Process
                 {
@@ -276,6 +345,33 @@ namespace WpfAppMultiPatch
 
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {
+            var wxVersionStr = GetValue(WeixinSubKey, "Version");
+            installPath = GetValue(WeixinSubKey, "InstallPath");
+
+            if (string.IsNullOrWhiteSpace(wxVersionStr))
+            {
+                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+            try
+            {
+                decodedVersion = new VersionCodec(encodedVersion).ToString();
+
+                VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            } 
             uint versionNumber = ConvertVersionToNumber(decodedVersion);
             TriggerPatch(WM_USER + versionNumber);
             //if (decodedVersion== "4.0.5.17")
@@ -296,6 +392,60 @@ namespace WpfAppMultiPatch
   
         }
 
-   
+        private void BtnMultiInstancePatch41_Click(object sender, RoutedEventArgs e)
+        {
+            string decodedVersion;
+            var wxVersionStr = GetValue(WeixinSubKey, "Version");
+            installPath = GetValue(WeixinSubKey, "InstallPath");
+
+            if (string.IsNullOrWhiteSpace(wxVersionStr))
+            {
+                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+            try
+            {
+                decodedVersion = DecodeFromInteger4(encodedVersion).ToString();
+
+                VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+            var config = LoadPatchConfig();
+            if (config == null)
+                return;
+
+            if (!config.TryGetValue(decodedVersion, out PatchInfo? patchInfo) || patchInfo == null)
+            {
+                MessageBox.Show($"未在配置中找到版本 {decodedVersion} 的补丁信息。", "版本不支持", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+
+            TryPatchWeChatDll(decodedVersion, patchInfo.position);
+        }
+
+        private void BtnLaunchWeChat41_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void BtnPatch141_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

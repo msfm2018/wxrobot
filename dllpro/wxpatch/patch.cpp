@@ -14,7 +14,7 @@
 #define WM_EXEC_PATCH_40626 (WM_USER + 40626)
 #define WM_EXEC_PATCH_40633 (WM_USER + 40633)
 #define WM_EXEC_PATCH_41614 (WM_USER + 41614)
-
+#define WM_EXEC_PATCH_41621 (WM_USER + 41621)
 
 
 HWND g_hMsgWnd = NULL;
@@ -82,6 +82,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         PatchRevokeMsg(PATCH_OFFSET41614);  // 收到消息后执行
         Sleep(500); // 延时1秒
        // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
+        return 0;
+    }
+    else   if (message == WM_EXEC_PATCH_41621) {
+
+        PatchRevokeMsg(PATCH_OFFSET41621);  // 收到消息后执行
+	
+        Sleep(500); // 延时1秒
+        // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
         return 0;
     }
       

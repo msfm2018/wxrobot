@@ -32,6 +32,12 @@
 
 #define PATCH_OFFSET41614 0x1C70226 // For Weixin 4.0.6.13 (for 64-bit)
 
-#define PATCH_OFFSET41621 0x1C78276 // For Weixin 4.0.6.13 (for 64-bit)
+#define PATCH_OFFSET41621 0x1C78276 // For Weixin 4.0..21 (for 64-bit)
+
+
+
+#define PATCH_OFFSET41630 0x1C78323 // For Weixin 4.1.0.30 (for 64-bit)
 
 void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET);
+
+void PatchRevokeMsg41030(ULONG_PTR PATCH_OFFSET);

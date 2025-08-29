@@ -15,7 +15,7 @@
 #define WM_EXEC_PATCH_40633 (WM_USER + 40633)
 #define WM_EXEC_PATCH_41614 (WM_USER + 41614)
 #define WM_EXEC_PATCH_41621 (WM_USER + 41621)
-
+#define WM_EXEC_PATCH_41630 (WM_USER + 41630)
 
 HWND g_hMsgWnd = NULL;
 
@@ -92,7 +92,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
         return 0;
     }
-      
+    else   if (message == WM_EXEC_PATCH_41630) {  //4.1.0.30
+
+      //  PatchRevokeMsg(PATCH_OFFSET41630);  // 收到消息后执行
+
+
+     //   Sleep(500); // 延时1秒
+   
+      //  PatchRevokeMsg(0x1C5D53F);  // 收到消息后执行
+      //  Sleep(500); // 延时1秒
+      //  PatchRevokeMsg(0x1C5D52D);  // 收到消息后执行
+
+        Sleep(500); // 延时1秒
+        PatchRevokeMsg41030(0x1C78311);  // 收到消息后执行
+        return 0;
+    }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 

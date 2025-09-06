@@ -103,7 +103,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     else   if (message == WM_EXEC_PATCH_41634) {  //4.1.0.34
 
         Sleep(500); // 延时1秒
-        PatchRevokeMsg41030(0x1CF4311);  // 收到消息后执行
+
+        PatchRevokeMsg41030(0x1CF4311);
         return 0;
     }
 

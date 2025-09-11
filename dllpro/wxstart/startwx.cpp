@@ -49,7 +49,7 @@ HMODULE GetRemoteModuleHandle(DWORD pid, const std::wstring& moduleName, DWORD t
 }
 
 
-bool InjectDLL(DWORD pid, const std::wstring& dllPath) {
+extern "C" __declspec(dllexport) bool InjectDLL(DWORD pid, const std::wstring& dllPath) {
     HANDLE hProc = OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
         FALSE,
@@ -177,18 +177,18 @@ std::wstring GetWeChatInstallPath() {
         }
     }
 
-    return L""; // δ ҵ   װ·  
+    return L""; 
 }
 
 
-//    ΢ Ų ע   ( Ľ   )
+
 extern "C" __declspec(dllexport) int StartWeChatAndInject(const wchar_t* dllPath) {
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
     std::wstring exePath;
     std::wstring installDir; // Declare installDir here
 
-    //    Ի ȡ΢ Ű װ·  
+ 
     installDir = GetWeChatInstallPath();
     if (installDir.empty()) {
         MessageBoxW(NULL, L"Failed to find WeChat installation path in registry.", L"Injection Error", MB_OK | MB_ICONERROR);
@@ -238,7 +238,27 @@ std::vector<DWORD> FindAllProcessIds(const std::wstring& processName) {
 }
 
 
-extern "C" __declspec(dllexport) int InjectToWeChat(const wchar_t* dllPath) {
+extern "C" __declspec(dllexport) int InjectToWeChat(DWORD pid,const wchar_t* dllPath) {
+ /*   auto pids = FindAllProcessIds(L"Weixin.exe");
+    if (pids.empty()) {
+        MessageBoxW(NULL, L"WeChat process (Weixin.exe) not found.", L"Injection Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    bool allOk = true;*/
+   // for (DWORD pid : pids) {
+        InjectDLL(pid, dllPath);
+        //if (!InjectDLL(pid, dllPath)) {
+        //    allOk = false;
+        //    // 这里可以选择是否遇到失败就提前退出
+        //    // return 2;
+        //}
+  //  }
+
+   // return allOk ? 0 : 2;
+}
+
+extern "C" __declspec(dllexport) int InjectToWeChat3(const wchar_t* dllPath) {
     auto pids = FindAllProcessIds(L"Weixin.exe");
     if (pids.empty()) {
         MessageBoxW(NULL, L"WeChat process (Weixin.exe) not found.", L"Injection Error", MB_OK | MB_ICONERROR);
@@ -257,7 +277,7 @@ extern "C" __declspec(dllexport) int InjectToWeChat(const wchar_t* dllPath) {
 
     return allOk ? 0 : 2;
 }
-
+// 废弃 
 extern "C" __declspec(dllexport) int InjectToWeChat2(const wchar_t* dllPath) {
     DWORD pid = FindProcessId(L"Weixin.exe"); 
     if (pid == 0) {

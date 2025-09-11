@@ -1,22 +1,16 @@
-﻿using Microsoft.Win32; // Required for OpenFileDialog
+﻿using application;
+using Microsoft.Win32; // Required for OpenFileDialog
 using MultiWeixin.Assist;
-using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;       // Required for Path operations
-using System.Reflection; // Required for Assembly.GetExecutingAssembly()
+using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices; // Required for DllImport
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Text.Json;
-using System.Text.Json.Serialization; // Don't forget this using directive
+using System.Windows;
+
+
 
 public class PatchInfo
 {
@@ -25,9 +19,17 @@ public class PatchInfo
 }
 
 
+
+
 namespace WpfAppMultiPatch
 {
-  
+
+    public class ProcessInfo
+    {
+        public uint ProcessId { get; set; }
+        public IntPtr WindowHandle { get; set; }
+    }
+
     public partial class MainWindow : Window
     {
         // DLL imports
@@ -35,25 +37,27 @@ namespace WpfAppMultiPatch
         public static extern int StartWeChatAndInject(string dllPath);
 
         [DllImport("wxstart.dll", CharSet = CharSet.Unicode)]
-        public static extern int InjectToWeChat(string dllPath);
+        public static extern int InjectToWeChat(uint pid, string dllPath);
 
         [DllImport("myfilemopen.dll", CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
 
         public static extern bool ApplyPatchToFile(
         [MarshalAs(UnmanagedType.LPWStr)] string dllPath, // wchar_t* 对应 C# 的 string，需要 MarshalAs 指定类型
-         [MarshalAs(UnmanagedType.LPWStr)] string patchData 
-  
-    );
+         [MarshalAs(UnmanagedType.LPWStr)] string patchData  );
 
-   
+        [DllImport("wxstart.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I1)] // 确保 C++ bool 正确映射
+        public static extern bool InjectDLL(uint pid, string dllPath);
 
-
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+
 
         private const uint WM_USER = 0x0400;
 
@@ -62,7 +66,64 @@ namespace WpfAppMultiPatch
         string installPath = "";
         string decodedVersion="";
 
-        private  string DecodeFromInteger4(uint encodedVersion)
+
+        public List<int> FindAllProcessIdsByWindowTitle1(string windowTitle)
+        {
+            List<int> pids = new List<int>();
+            Process[] processes = Process.GetProcesses();
+            List<ProcessInfo> processInfos = new List<ProcessInfo>();
+            foreach (var proc in processes)
+            {
+                try
+                {
+                    // 检查主窗口标题是否包含指定文字
+                    //if (!string.IsNullOrEmpty(proc.MainWindowTitle) && proc.MainWindowTitle.Contains(windowTitle))
+                    if (!string.IsNullOrEmpty(proc.MainWindowTitle) && proc.MainWindowTitle.Equals(windowTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        pids.Add(proc.Id);
+                    }
+                }
+                catch
+                {
+                    // 有些进程可能无法访问，会抛异常，忽略它们
+                }
+            }
+
+            return pids;
+        }
+
+        public List<ProcessInfo> FindAllProcessIdsByWindowTitle(string windowTitle)
+        {
+            List<ProcessInfo> processInfos = new List<ProcessInfo>();
+            Process[] processes = Process.GetProcesses();
+
+            foreach (var proc in processes)
+            {
+                try
+                {
+                    // 检查主窗口标题是否包含指定文字
+                    if (!string.IsNullOrEmpty(proc.MainWindowTitle) && proc.MainWindowTitle.Equals(windowTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // 获取窗口句柄
+                        IntPtr hWnd = proc.MainWindowHandle;
+
+                        // 将进程 ID 和窗口句柄加入列表
+                        processInfos.Add(new ProcessInfo
+                        {
+                            ProcessId = ((uint)proc.Id),
+                            WindowHandle = hWnd
+                        });
+                    }
+                }
+                catch
+                {
+                    // 有些进程可能无法访问，会抛异常，忽略它们
+                }
+            }
+            return processInfos;
+        }
+
+        private string DecodeFromInteger4(uint encodedVersion)
         {
             int encodedMajor = (int)((encodedVersion >> 24) & 0xFF);
             int encodedMinor = (int)((encodedVersion >> 16) & 0xFF);
@@ -102,16 +163,21 @@ namespace WpfAppMultiPatch
             return result;
         }
 
+   
+
+
         private void TriggerPatch(uint cmd)
         {
-            IntPtr hWnd = FindWindow("RevokePatchMsgWnd", string.Empty); // Replace null with string.Empty
-            if (hWnd == IntPtr.Zero)
-            {
-                MessageBox.Show("找不到隐藏窗口，DLL可能尚未注入或尚未初始化");
-                return;
-            }
+            PatchHelper.BroadcastPatch(cmd);
+            //IntPtr hWnd = FindWindow("RevokePatchMsgWnd", string.Empty); // Replace null with string.Empty
+            //if (hWnd == IntPtr.Zero)
+            //{
+            //    MessageBox.Show("找不到隐藏窗口，DLL可能尚未注入或尚未初始化");
+            //    return;
+            //}
+            //PostMessage(hWnd, cmd, 0, 0);
 
-            PostMessage(hWnd, cmd, 0, 0);
+
         }
 
         public MainWindow()
@@ -138,33 +204,7 @@ namespace WpfAppMultiPatch
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
          
-            //var wxVersionStr = GetValue(WeixinSubKey, "Version");
-            //installPath = GetValue(WeixinSubKey, "InstallPath");
-
-            //if (string.IsNullOrWhiteSpace(wxVersionStr))
-            //{
-            //    MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return;
-            //}
-
-            //if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
-            //{
-            //    MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return;
-            //}
-
-       
-            //try
-            //{
-            //    decodedVersion = new VersionCodec(encodedVersion).ToString();
-            
-            //    VersionLabel.Content = $"wx版本号：{decodedVersion}";
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return;
-            //}
+        
         }
 
       
@@ -258,25 +298,14 @@ namespace WpfAppMultiPatch
 
         private void BtnLaunchWeChat_Click(object sender, RoutedEventArgs e)
         {
+           
+        }
+
+        private void writePatch(uint cmd)
+        {
+
             try
             {
-                installPath = GetValue(WeixinSubKey, "InstallPath");
-                // 启动微信进程
-                Process weChatProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        //FileName = weChatPath,
-                        FileName = installPath + @"\Weixin.exe",
-                        UseShellExecute = false
-                    }
-                };
-
-                weChatProcess.Start();
-
-                // 等待微信加载
-                Thread.Sleep(2000);
-
                 // 注入 DLL
                 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
@@ -286,16 +315,55 @@ namespace WpfAppMultiPatch
                     MessageBox.Show($"错误：未找到 wxpatch.dll 于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                var pids = FindAllProcessIdsByWindowTitle("微信");
+              //  var pids = FindAllProcessIds("Weixin.exe");
+                if (pids.Count == 0)
+                {
+                    MessageBox.Show("未找到微信进程。", "错误",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
 
-                int result = InjectToWeChat(dllPath);
-                if (result == 0)
+                foreach (var info in pids)
                 {
-                    //MessageBox.Show("微信已启动。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    IntPtr hModule = FindRemoteDll.GetRemoteModuleHandle(info.ProcessId, "wxpatch.dll");
+                    if (hModule != IntPtr.Zero)
+                    {
+                        // 已经注入过
+                        continue;
+                    }
+                    else
+                    {
+                        InjectToWeChat(info.ProcessId, dllPath);
+                        Thread.Sleep(500); // 等待注入完成
+                        string className = "RevokePatchMsgWnd";
+                        IntPtr childWindowHandle = FindWindowEx(info.WindowHandle, IntPtr.Zero, className, null);
+
+                        PostMessage(childWindowHandle, cmd, 0, 0);
+                    }
                 }
-                else
-                {
-                    MessageBox.Show($"InjectToWeChat 返回: {result}", "注入失败", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+
+                // 注入所有进程
+                //foreach (uint pid in pids)
+                //{
+                //    IntPtr hModule = FindRemoteDll.GetRemoteModuleHandle(pid, "wxpatch.dll");
+                //    if (hModule != IntPtr.Zero)
+                //    {
+                //        // 已经注入过
+                //        continue;
+                //    }
+                //    else
+                //    {
+                //        InjectToWeChat(pid, dllPath);
+
+                //        string className = "RevokePatchMsgWnd";
+                //        IntPtr childWindowHandle = FindWindowEx(pid, IntPtr.Zero, className, null);
+
+
+                //    }
+                //}
+
+
             }
             catch (DllNotFoundException)
             {
@@ -305,7 +373,12 @@ namespace WpfAppMultiPatch
             {
                 MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+
+
+
         }
+
         private Dictionary<string, PatchInfo>? LoadPatchConfig()
         {
             try
@@ -345,6 +418,9 @@ namespace WpfAppMultiPatch
 
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {
+            //writePatch();
+            //Thread.Sleep(2000);
+
             var wxVersionStr = GetValue(WeixinSubKey, "Version");
             installPath = GetValue(WeixinSubKey, "InstallPath");
 
@@ -373,7 +449,11 @@ namespace WpfAppMultiPatch
                 return;
             } 
             uint versionNumber = ConvertVersionToNumber(decodedVersion);
-            TriggerPatch(WM_USER + versionNumber);
+
+            writePatch(WM_USER + versionNumber);
+          //  Thread.Sleep(2000);
+
+           // TriggerPatch(WM_USER + versionNumber);
             //if (decodedVersion== "4.0.5.17")
             //{
             //    TriggerPatch(WM_USER + 40517);

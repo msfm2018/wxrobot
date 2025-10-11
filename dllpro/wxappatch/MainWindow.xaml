@@ -93,7 +93,6 @@
         <StackPanel Orientation="Vertical">
 
             <Label x:Name="VersionLabel" Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>
-            <Button x:Name="BtnMultiInstancePatch" Content="多开文件补丁" Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch_Click"/>
 
 
             <Separator Margin="0,15"/>
@@ -103,8 +102,8 @@
 
             <!-- 4.1 栏 -->
             <Separator Margin="0,20"/>
-            <Label Content="4.1 版本及以后" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
-            <Button x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 (4.1)" Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
+            <Label Content="4.1.1.19 版本" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
+            <Button x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 " Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
 
         </StackPanel>
     </Grid>

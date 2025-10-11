@@ -18,96 +18,104 @@
 #define WM_EXEC_PATCH_41630 (WM_USER + 41630)
 #define WM_EXEC_PATCH_41634 (WM_USER + 41634)
 
-
+#define WM_EXEC_PATCH_41119 (WM_USER + 41119)
 HWND g_hMsgWnd = NULL;
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    if (message == WM_EXEC_PATCH_40517) {
-        PatchRevokeMsg(PATCH_OFFSET40517);  // 收到消息后执行
-        return 0;
-    }else   if (message == WM_EXEC_PATCH_40518) {
-        PatchRevokeMsg(PATCH_OFFSET40518);  // 收到消息后执行
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40523) {
-        PatchRevokeMsg(PATCH_OFFSET40523);  // 收到消息后执行
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40526) {
-        PatchRevokeMsg(PATCH_OFFSET40526);  // 收到消息后执行
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40527) {
-        PatchRevokeMsg(PATCH_OFFSET40527);  // 收到消息后执行
-		Sleep(500); // 延时1秒
-		PatchRevokeMsg(PATCH_OFFSET405270);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40613) {
+  //  if (message == WM_EXEC_PATCH_40517) {
+  //      PatchRevokeMsg(PATCH_OFFSET40517);  // 收到消息后执行
+  //      return 0;
+  //  }else   if (message == WM_EXEC_PATCH_40518) {
+  //      PatchRevokeMsg(PATCH_OFFSET40518);  // 收到消息后执行
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40523) {
+  //      PatchRevokeMsg(PATCH_OFFSET40523);  // 收到消息后执行
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40526) {
+  //      PatchRevokeMsg(PATCH_OFFSET40526);  // 收到消息后执行
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40527) {
+  //      PatchRevokeMsg(PATCH_OFFSET40527);  // 收到消息后执行
+		//Sleep(500); // 延时1秒
+		//PatchRevokeMsg(PATCH_OFFSET405270);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40613) {
 
-        PatchRevokeMsg(PATCH_OFFSET40613);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg(PATCH_OFFSET406130);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40617) {
+  //      PatchRevokeMsg(PATCH_OFFSET40613);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg(PATCH_OFFSET406130);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40617) {
 
-        PatchRevokeMsg(PATCH_OFFSET40617);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg(PATCH_OFFSET406170);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40621) {
+  //      PatchRevokeMsg(PATCH_OFFSET40617);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg(PATCH_OFFSET406170);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40621) {
 
-        PatchRevokeMsg(PATCH_OFFSET40621);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg(PATCH_OFFSET406210);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40626) {
+  //      PatchRevokeMsg(PATCH_OFFSET40621);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg(PATCH_OFFSET406210);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40626) {
 
-        PatchRevokeMsg(PATCH_OFFSET40626);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg(PATCH_OFFSET406260);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_40633) {
+  //      PatchRevokeMsg(PATCH_OFFSET40626);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg(PATCH_OFFSET406260);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_40633) {
 
-        PatchRevokeMsg(PATCH_OFFSET40633);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg(PATCH_OFFSET406330);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_41614) {
+  //      PatchRevokeMsg(PATCH_OFFSET40633);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg(PATCH_OFFSET406330);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_41614) {
 
-        PatchRevokeMsg(PATCH_OFFSET41614);  // 收到消息后执行
-        Sleep(500); // 延时1秒
-       // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_41621) {
+  //      PatchRevokeMsg(PATCH_OFFSET41614);  // 收到消息后执行
+  //      Sleep(500); // 延时1秒
+  //     // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_41621) {
 
-        PatchRevokeMsg(PATCH_OFFSET41621);  // 收到消息后执行
+  //      PatchRevokeMsg(PATCH_OFFSET41621);  // 收到消息后执行
 	
+  //      Sleep(500); // 延时1秒
+  //      // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_41630) {  //4.1.0.30
+
+  //      Sleep(500); // 延时1秒
+  //      PatchRevokeMsg41030(0x1C78311);  // 收到消息后执行
+  //      return 0;
+  //  }
+  //  else   if (message == WM_EXEC_PATCH_41634) {  //4.1.0.34
+
+  //      Sleep(500); // 延时1秒
+
+  //      PatchRevokeMsg41030(0x1CF4311);
+  //      return 0;
+  //  }
+  //  else  
+        if (message == 1) {  //4.1.1.19
+           // if (message == 1) {  //4.1.1.19
         Sleep(500); // 延时1秒
-        // PatchRevokeMsg(PATCH_OFFSET416140);  // 收到消息后执行企业版
+   
+        PatchRevokeMsg41030(0x1C9F0D1);
+     
         return 0;
     }
-    else   if (message == WM_EXEC_PATCH_41630) {  //4.1.0.30
-
-        Sleep(500); // 延时1秒
-        PatchRevokeMsg41030(0x1C78311);  // 收到消息后执行
-        return 0;
-    }
-    else   if (message == WM_EXEC_PATCH_41634) {  //4.1.0.34
-
-        Sleep(500); // 延时1秒
-
-        PatchRevokeMsg41030(0x1CF4311);
-        return 0;
-    }
-
 
 
     return DefWindowProc(hWnd, message, wParam, lParam);

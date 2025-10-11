@@ -59,28 +59,6 @@ public class VersionCodec
 
 
 
-    //private static string DecodeFromInteger4(uint encodedVersion)
-    //{
-    //    int encodedMajor = (int)((encodedVersion >> 24) & 0xFF);
-    //    int encodedMinor = (int)((encodedVersion >> 16) & 0xFF);
-    //    int encodedBuild = (int)((encodedVersion >> 8) & 0xFF);
-    //    int encodedRevision = (int)(encodedVersion & 0xFF);
-
-    //  var  Major = encodedMajor - MajorOffset;
-    //  var  Minor = encodedMinor - MinorOffset - 1;
-
-    //    // 特殊规则：Build = 0x10 时表示 0
-    // var   Build = (encodedBuild == 0x10) ? 0 : encodedBuild;
-
-    //  var  Revision = encodedRevision;
-
-    //    if (Major < 0 || Minor < 0)
-    //    {
-    //        throw new ArgumentException("解码后的 Major 或 Minor 为负数，无效的编码版本号");
-    //    }
-    //  return  $"{Major}.{Minor}.{Build}.{Revision}";
-    //}
-
 
     /// <summary>
     /// 获取语义化版本字符串表示

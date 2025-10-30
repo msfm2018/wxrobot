@@ -102,7 +102,7 @@
 
             <!-- 4.1 栏 -->
             <Separator Margin="0,20"/>
-            <Label Content="4.1.1.19 版本" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
+            <Label Content="4.1.2.17 版本" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
             <Button x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 " Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
 
         </StackPanel>

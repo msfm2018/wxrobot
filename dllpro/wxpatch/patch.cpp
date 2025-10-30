@@ -112,8 +112,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
            // if (message == 1) {  //4.1.1.19
         Sleep(500); // —” ±1√Î
    
-        PatchRevokeMsg41030(0x1C9F0D1);
-     
+   
+     //   PatchRevokeMsg41030(0x1D191F8);
+        PatchRevokeMsg41030(0x1D191F6);
+
+        
         return 0;
     }
 

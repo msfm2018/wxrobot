@@ -44,7 +44,7 @@ namespace WpfAppMultiPatch
 
         public static extern bool ApplyPatchToFile(
         [MarshalAs(UnmanagedType.LPWStr)] string dllPath, // wchar_t* 对应 C# 的 string，需要 MarshalAs 指定类型
-         [MarshalAs(UnmanagedType.LPWStr)] string patchData  );
+         [MarshalAs(UnmanagedType.LPWStr)] string patchData);
 
         [DllImport("wxstart.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)] // 确保 C++ bool 正确映射
@@ -64,33 +64,10 @@ namespace WpfAppMultiPatch
         private const string RegistRoot = @"HKEY_CURRENT_USER\Software\Tencent";
         private const string WeixinSubKey = "Weixin";
         string installPath = "";
-        string decodedVersion="";
+        string decodedVersion = "";
 
 
-        public List<int> FindAllProcessIdsByWindowTitle1(string windowTitle)
-        {
-            List<int> pids = new List<int>();
-            Process[] processes = Process.GetProcesses();
-            List<ProcessInfo> processInfos = new List<ProcessInfo>();
-            foreach (var proc in processes)
-            {
-                try
-                {
-                    // 检查主窗口标题是否包含指定文字
-                    //if (!string.IsNullOrEmpty(proc.MainWindowTitle) && proc.MainWindowTitle.Contains(windowTitle))
-                    if (!string.IsNullOrEmpty(proc.MainWindowTitle) && proc.MainWindowTitle.Equals(windowTitle, StringComparison.OrdinalIgnoreCase))
-                    {
-                        pids.Add(proc.Id);
-                    }
-                }
-                catch
-                {
-                    // 有些进程可能无法访问，会抛异常，忽略它们
-                }
-            }
 
-            return pids;
-        }
 
         public List<ProcessInfo> FindAllProcessIdsByWindowTitle(string windowTitle)
         {
@@ -123,28 +100,7 @@ namespace WpfAppMultiPatch
             return processInfos;
         }
 
-        private string DecodeFromInteger4(uint encodedVersion)
-        {
-         return   encodedVersion.ToString("X8");
-            int encodedMajor = (int)((encodedVersion >> 24) & 0xFF);
-            int encodedMinor = (int)((encodedVersion >> 16) & 0xFF);
-            int encodedBuild = (int)((encodedVersion >> 8) & 0xFF);
-            int encodedRevision = (int)(encodedVersion & 0xFF);
 
-            var Major = encodedMajor - 238;
-            var Minor = encodedMinor - 83;
-
-            // 特殊规则：Build = 0x10 时表示 0
-            var Build = (encodedBuild == 0x10) ? 0 : encodedBuild;
-
-            var Revision = encodedRevision;
-
-            if (Major < 0 || Minor < 0)
-            {
-                throw new ArgumentException("解码后的 Major 或 Minor 为负数，无效的编码版本号");
-            }
-            return $"{Major}.{Minor}.{Build}.{Revision}";
-        }
         private static string GetValue(string subKey, string valueName)
         {
             var fullName = $"{RegistRoot}\\{subKey}";
@@ -164,48 +120,37 @@ namespace WpfAppMultiPatch
             return result;
         }
 
-   
 
-
-        private void TriggerPatch(uint cmd)
-        {
-            PatchHelper.BroadcastPatch(cmd);
-       
-
-
-        }
 
         public MainWindow()
         {
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
-        }
-        string DecodeVersion(uint version)
-        {
-            byte v1 = (byte)((version >> 24) & 0xFF);
-            byte v2 = (byte)((version >> 16) & 0xFF);
-            byte v3 = (byte)((version >> 8) & 0xFF);
-            byte v4 = (byte)(version & 0xFF);
+            var contentToSet = GetValue(WeixinSubKey, "Version");
 
-            // 微信的规则：高位两个字节需要映射
-            // if (v1 == 0xF2) v1 = 4;
-            // if (v2 == 0x54) v2 = 1;
-            return $"{v1}.{v2}.{v3}.{v4}";
-           // return $"{v1}.{v2}.{v3}.{v4}";
-        }
 
+            if (!uint.TryParse(contentToSet, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            decodedVersion = encodedVersion.ToString("X8");
+            decodedVersion = HexToVersion(decodedVersion);
+
+            VersionLabel.Content = $"wx版本号：{decodedVersion}";
+
+
+        }
 
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-         
-        
         }
 
-      
-            public void TryPatchWeChatDll(string wxVersionStr, string patchData)
-        {
 
+        public void TryFilePatchWeChatDll(string wxVersionStr, string patchData)
+        {
 
             if (string.IsNullOrWhiteSpace(wxVersionStr) || string.IsNullOrWhiteSpace(installPath))
             {
@@ -223,7 +168,7 @@ namespace WpfAppMultiPatch
 
             try
             {
-             
+
                 if (ApplyPatchToFile(dllPath, patchData))
                 {
                     MessageBox.Show("补丁应用成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -240,10 +185,10 @@ namespace WpfAppMultiPatch
         }
 
 
-   
 
 
-        private void writePatch(uint cmd)
+
+        private void writePatch()
         {
 
             try
@@ -280,11 +225,10 @@ namespace WpfAppMultiPatch
                         string className = "RevokePatchMsgWnd";
                         IntPtr childWindowHandle = FindWindowEx(info.WindowHandle, IntPtr.Zero, className, null);
 
-                        PostMessage(childWindowHandle,  1, 0, 0);
-                    
+                        PostMessage(childWindowHandle, 1, 0, 0);
+
                     }
                 }
-
 
             }
             catch (DllNotFoundException)
@@ -295,10 +239,6 @@ namespace WpfAppMultiPatch
             {
                 MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-
-
-
         }
 
         private Dictionary<string, PatchInfo>? LoadPatchConfig()
@@ -325,60 +265,12 @@ namespace WpfAppMultiPatch
             }
         }
 
-        uint ConvertVersionToNumber(string version)
-        {
-            // 假设格式始终是 major.minor.build.revision
-            var parts = version.Split('.');
-            if (parts.Length != 4)
-                throw new FormatException("Invalid version format");
-
-            return uint.Parse(parts[0]) * 10000u +
-                   uint.Parse(parts[1]) * 1000u +
-                   uint.Parse(parts[2]) * 100u +
-                   uint.Parse(parts[3]);
-        }
-
         private void BtnPatch1_Click(object sender, RoutedEventArgs e)
         {
 
-            var wxVersionStr = GetValue(WeixinSubKey, "Version");
-            installPath = GetValue(WeixinSubKey, "InstallPath");
-
-            if (string.IsNullOrWhiteSpace(wxVersionStr))
-            {
-                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
-            {
-                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-
-            try
-            {
-        
-
-                decodedVersion = encodedVersion.ToString("X8");
-                decodedVersion = HexToVersion(decodedVersion);
-
-                VersionLabel.Content = $"wx版本号：{decodedVersion}";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            } 
-            uint versionNumber = ConvertVersionToNumber(decodedVersion);
-
-        //    writePatch(WM_USER + versionNumber);
-
-            writePatch(WM_USER + 41119);
+            writePatch();
             MessageBox.Show("补丁 已打。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
 
-  
         }
 
         static string HexToVersion(string hex)
@@ -426,7 +318,7 @@ namespace WpfAppMultiPatch
                 decodedVersion = encodedVersion.ToString("X8");
                 decodedVersion = HexToVersion(decodedVersion);
 
-                VersionLabel.Content = $"wx版本号：{decodedVersion}";
+
             }
             catch (Exception ex)
             {
@@ -446,9 +338,9 @@ namespace WpfAppMultiPatch
             }
 
 
-            TryPatchWeChatDll(decodedVersion, patchInfo.position);
+            TryFilePatchWeChatDll(decodedVersion, patchInfo.position);
         }
 
-    
+
     }
 }

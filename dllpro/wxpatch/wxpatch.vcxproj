@@ -132,11 +132,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="fun.cpp" />
-    <ClCompile Include="minhook\src\buffer.c" />
-    <ClCompile Include="minhook\src\hde\hde32.c" />
-    <ClCompile Include="minhook\src\hde\hde64.c" />
-    <ClCompile Include="minhook\src\hook.c" />
-    <ClCompile Include="minhook\src\trampoline.c" />
     <ClCompile Include="patch.cpp" />
   </ItemGroup>
   <ItemGroup>

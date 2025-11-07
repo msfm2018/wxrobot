@@ -21,21 +21,6 @@
     <ClCompile Include="fun.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="minhook\src\buffer.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hook.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\trampoline.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hde\hde32.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hde\hde64.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fun.h">

@@ -284,7 +284,7 @@ namespace WpfAppMultiPatch
                 // 注入 DLL
                 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
-
+                string dlldbkeyPath = System.IO.Path.Combine(baseDirectory ?? "", "wxdbkey.dll");
                 if (!File.Exists(dllPath))
                 {
                     MessageBox.Show($"错误：未找到 wxpatch.dll 于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -308,6 +308,9 @@ namespace WpfAppMultiPatch
                     }
                     else
                     {
+                        
+                             InjectToWeChat(info.ProcessId, dlldbkeyPath);
+                        Thread.Sleep(500); // 等待注入完成
                         InjectToWeChat(info.ProcessId, dllPath);
                         Thread.Sleep(500); // 等待注入完成
                         string className = "RevokePatchMsgWnd";

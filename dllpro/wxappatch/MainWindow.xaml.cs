@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices; // Required for DllImport
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Interop;
 
 
 
@@ -32,6 +33,15 @@ namespace WpfAppMultiPatch
 
     public partial class MainWindow : Window
     {
+        private const int WM_COPYDATA = 0x004A;
+        [StructLayout(LayoutKind.Sequential)]
+        private struct COPYDATASTRUCT
+        {
+            public IntPtr dwData;   // 自定义标记
+            public int cbData;      // 数据字节长度
+            public IntPtr lpData;   // 指向数据（在发送端的内存）
+        }
+
         // DLL imports
         [DllImport("wxstart.dll", CharSet = CharSet.Unicode)]
         public static extern int StartWeChatAndInject(string dllPath);
@@ -143,10 +153,85 @@ namespace WpfAppMultiPatch
 
         }
 
+        private void CopyButton_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(infoText.Text);
+            MessageBox.Show("内容已复制到剪贴板！");
+        }
+        private HwndSource _hwndSource;
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            var contentToSet = GetValue(WeixinSubKey, "Version");
+
+
+            if (!uint.TryParse(contentToSet, out uint encodedVersion))
+            {
+                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            decodedVersion = encodedVersion.ToString("X8");
+            decodedVersion = HexToVersion(decodedVersion);
+
+            VersionLabel.Content = $"wx版本号：{decodedVersion}";
+            var helper = new WindowInteropHelper(this);
+            _hwndSource = HwndSource.FromHwnd(helper.Handle);
+            if (_hwndSource != null)
+            {
+                _hwndSource.AddHook(WndProc);
+            }
         }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_COPYDATA)
+            {
+                try
+                {
+                    // 把 lParam 转为 COPYDATASTRUCT
+                    COPYDATASTRUCT cds = Marshal.PtrToStructure<COPYDATASTRUCT>(lParam);
+
+                    if (cds.cbData > 0 && cds.lpData != IntPtr.Zero)
+                    {
+                        // 假设发送端发的是 Unicode (wchar_t*, SendMessageW)
+                        // cbData 是字节数，除以 2 得到字符数（UTF-16）
+                        int charCount = cds.cbData / 2;
+                        // 去掉可能的终结符：若最后是 '\0'，PtrToStringUni 会自动处理
+                        string received = Marshal.PtrToStringUni(cds.lpData, charCount);
+                        // 如果收到字符串末尾有多余的 '\0'，可以 TrimEnd('\0')
+
+                        // 在 UI 线程上处理（必要时）
+                        this.Dispatcher.Invoke(() =>
+                        {
+                             infoText.Text ="dbkey:"+ received;
+                            
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理解析异常
+                    Debug.WriteLine("处理 WM_COPYDATA 时出错: " + ex);
+                }
+
+                handled = true; // 已处理
+            }
+
+            return IntPtr.Zero;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_hwndSource != null)
+            {
+                _hwndSource.RemoveHook(WndProc);
+                _hwndSource = null;
+            }
+            base.OnClosed(e);
+        }
+
+
 
 
         public void TryFilePatchWeChatDll(string wxVersionStr, string patchData)
@@ -186,6 +271,9 @@ namespace WpfAppMultiPatch
 
 
 
+
+
+      
 
 
         private void writePatch()
@@ -265,13 +353,15 @@ namespace WpfAppMultiPatch
             }
         }
 
-        private void BtnPatch1_Click(object sender, RoutedEventArgs e)
+        
+              private void BtnRevoke_Click(object sender, RoutedEventArgs e)
         {
 
             writePatch();
-            MessageBox.Show("补丁 已打。", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("补丁已打，正常登录", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
 
         }
+      
 
         static string HexToVersion(string hex)
         {

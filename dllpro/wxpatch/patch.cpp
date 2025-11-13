@@ -1,10 +1,5 @@
-#include <Windows.h>
-#include <string>
-#include <fstream>
-#include <mutex>
-#include <sstream>
-#include <iomanip>
-#include <Psapi.h>
+#include <windows.h>
+#include <cstdio> 
 #include "fun.h"
 #include "mopen.h"
 
@@ -15,13 +10,14 @@ HWND g_hMsgWnd = NULL;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
 	if (message == 1) {
-		PatchRevokeMsg41030(0x1D4C296);
-
+		PatchRevokeMsg41030(0x1D4C5D6);
+		
 		return 0;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
 // 创建隐藏窗口用于接收消息
 DWORD WINAPI MsgWindowThread(LPVOID lpParam) {
 	WNDCLASS wc = { 0 };
@@ -58,11 +54,11 @@ DWORD WINAPI MsgWindowThread(LPVOID lpParam) {
 	UnregisterClass(TEXT("RevokePatchMsgWnd"), GetModuleHandle(NULL));
 	return 0;
 }
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
+
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
 	if (reason == DLL_PROCESS_ATTACH) {
 		DisableThreadLibraryCalls(hModule);
 
-		//防撤回
 		HANDLE hThread = CreateThread(NULL, 0, MsgWindowThread, NULL, 0, NULL);
 		if (hThread) {
 			CloseHandle(hThread);
@@ -75,3 +71,5 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
 	}
 	return TRUE;
 }
+
+

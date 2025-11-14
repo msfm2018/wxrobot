@@ -22,3 +22,7 @@ key的获取灵感来源于  ycccccccy/wx_key  感谢
 
 
 该工具用于导出正在运行中的微信进程的 key 并自动解密所有微信数据库文件以及导出 key 后数据库文件离线解密。  配合  这个项目 可以解析 数据库 -wxrobot_dbkey  
+
+<h1>Star History</h1>
+
+![Star History Chart](https://api.star-history.com/svg?repos=msfm2018/wxrobot&type=Date)

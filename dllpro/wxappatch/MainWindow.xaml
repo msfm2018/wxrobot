@@ -95,17 +95,31 @@
             <Label x:Name="VersionLabel" Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>
 
 
-            <Separator Margin="0,15"/>
-
-            <Label Content="扩展补丁" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
-            <Button x:Name="BtnPatch1" Content="防撤回补丁" Style="{StaticResource PatchButtonStyle}" Click="BtnPatch1_Click"/>
-
+           
             
             <!-- 4.1 栏 -->
-            <Separator Margin="0,20" />
+         
             <Label Content="不打开微信、直接点多开补丁" FontSize="20" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
             <Button x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 " Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
+           
+                <Separator Margin="0,20" />
+                <Label Content="登录界面执行，等提示后 正常登录" FontSize="15" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
+                <Button x:Name="BtnRevoke" Content="打防撤回与DBKey补丁" Style="{StaticResource PatchButtonStyle}" Click="BtnRevoke_Click"/>
+            <Separator Margin="0,20" />
+            <Label x:Name="dbkey" Content="dbkey" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
 
+            <StackPanel Margin="10">
+                <TextBlock x:Name="infoText"
+   Text="" 
+   TextWrapping="Wrap"
+                           FontSize="22"
+   Foreground="#FF555555"/>
+                <Button Content="复制"
+Margin="0,5,0,0"
+Click="CopyButton_Click"/>
+            </StackPanel>
+            <StackPanel Margin="6">
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

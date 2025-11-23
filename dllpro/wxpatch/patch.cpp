@@ -150,7 +150,8 @@ DWORD WINAPI MainThread(LPVOID) {
 	//0x4C5870 4.1.2.18
 	//0x5AAB2D0  4.1.4.15
 	//0x5AAC2D0  4.1.4.17 
-	const uintptr_t rva_setCipherKey = 0x5AAC2D0;
+	//0x5B997E0 4.1.5.16 
+	const uintptr_t rva_setCipherKey = 0x5B997E0;
 	g_targetAddress.store((uintptr_t)hmytest + rva_setCipherKey);
 	uintptr_t targetAddr = g_targetAddress.load();
 	WriteLog("SUCCESS:目标地址计算成功");
@@ -202,7 +203,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
 	if (message == 1) {
 		
-		PatchRevokeMsg41030(0x1D4C5D6);
+		PatchRevokeMsg41030(0x1D70CA6);
+		
 		return 0;
 	}
 

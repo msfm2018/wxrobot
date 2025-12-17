@@ -109,14 +109,20 @@
             <Label x:Name="dbkey" Content="dbkey" FontSize="16" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
 
             <StackPanel Margin="10">
-                <TextBlock x:Name="infoText"
-   Text="" 
-   TextWrapping="Wrap"
-                           FontSize="22"
-   Foreground="#FF555555"/>
-                <Button Content="复制"
-Margin="0,5,0,0"
-Click="CopyButton_Click"/>
+                <TextBox
+    x:Name="infoText"
+    Text="{Binding YourText}"
+    FontSize="22"
+    Foreground="#FF555555"
+    TextWrapping="Wrap"
+    IsReadOnly="True"
+    BorderThickness="0"
+    Background="Transparent"
+    ContextMenu="{x:Null}" />
+
+
+             
+        
             </StackPanel>
             <StackPanel Margin="6">
             </StackPanel>

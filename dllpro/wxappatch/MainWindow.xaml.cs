@@ -153,11 +153,7 @@ namespace WpfAppMultiPatch
 
         }
 
-        private void CopyButton_Click(object sender, RoutedEventArgs e)
-        {
-            Clipboard.SetText(infoText.Text);
-            MessageBox.Show("内容已复制到剪贴板！");
-        }
+       
         private HwndSource _hwndSource;
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)

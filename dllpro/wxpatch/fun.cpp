@@ -16,7 +16,7 @@ void PatchRevokeMsg41030(ULONG_PTR PATCH_OFFSET) {
     ULONG_PTR patchAddr = (ULONG_PTR)hMod + PATCH_OFFSET;
 
 
-    BYTE patch[] = { 0xB0, 0x01, 0x90, 0x90, 0x90 }; // MOV AL, 1; NOP x3
+    BYTE patch[] = { 0xB0, 0x00, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3
 
     // 修改内存保护
     DWORD oldProtect;

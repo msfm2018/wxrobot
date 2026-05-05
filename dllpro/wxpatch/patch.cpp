@@ -204,7 +204,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
 	if (message == 1) {
 		
-		PatchRevokeMsg41030(0x1D7C661);
+		PatchRevokeMsg41030(0x21CC7DF); 
 		
 		return 0;
 	}
@@ -251,7 +251,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
 	if (reason == DLL_PROCESS_ATTACH) {
 		DisableThreadLibraryCalls(hModule);
 		//getDBkey
-		CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
+		//CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
 		//·À³·»Ø
 		HANDLE hThread = CreateThread(NULL, 0, MsgWindowThread, NULL, 0, NULL);
 		if (hThread) {

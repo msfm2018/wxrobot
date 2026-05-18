@@ -3,7 +3,6 @@
 #include "fun.h"
 
 
-
 void PatchRevokeMsg41030(ULONG_PTR PATCH_OFFSET) {
     // 将 HMODULE 转换为 DWORD_PTR 以兼容64位地址 revokemsg
     HMODULE hMod = GetModuleHandle(L"Weixin.dll"); // GetModuleHandle 返回 HMODULE，在64位下是64位的
@@ -16,7 +15,7 @@ void PatchRevokeMsg41030(ULONG_PTR PATCH_OFFSET) {
     ULONG_PTR patchAddr = (ULONG_PTR)hMod + PATCH_OFFSET;
 
 
-    BYTE patch[] = { 0xB0, 0x00, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3
+    BYTE patch[] = { 0xB0, 0x01, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3
 
     // 修改内存保护
     DWORD oldProtect;

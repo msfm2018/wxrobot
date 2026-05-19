@@ -92,15 +92,9 @@
     <Grid Margin="15">
         <StackPanel Orientation="Vertical">
 
-            <Label x:Name="VersionLabel" Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>
-
-
-           
-            
-            <!-- 4.1 栏 -->
-         
+            <Label x:Name="VersionLabel" Content="" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" Foreground="#FF333333"/>         
             <Label Content="微信最新版本已经支持多开了" FontSize="20" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>
-            <Button Visibility="Hidden" x:Name="BtnMultiInstancePatch41" Content="多开文件补丁 " Style="{StaticResource MainButtonStyle}" Click="BtnMultiInstancePatch41_Click"/>
+
            
                 <Separator Margin="0,20" />
                 <Label Content="登录界面执行，等提示后 正常登录" FontSize="15" FontWeight="Bold" Margin="0,5,0,10" Foreground="#FF333333"/>

@@ -129,9 +129,143 @@ void WriteLog(const std::string& msg) {
 		ofs << "[" << buf << "] " << msg << std::endl;
 	}
 }
+// ==================== 新增 Hook 定义 ====================
+typedef int(__fastcall* MsgProcessFunc)(void* rcx, void* rdx, void* r8);  // 根据反汇编确定
 
+MsgProcessFunc pOriginalMsgProcess = nullptr;
+std::atomic<uintptr_t> g_msgFuncAddress{ 0 };
+int __fastcall HookedMsgProcess(void* rcx, void* rdx, void* r8)
+{
+	// 安全检查
+	if (rdx == nullptr)
+	{
+		if (pOriginalMsgProcess != nullptr)
+			return pOriginalMsgProcess(rcx, rdx, r8);
 
-DWORD WINAPI MainThread(LPVOID) {
+		return 0;
+	};
+
+	// ==================== 日志控制（防止刷爆日志）===================
+	static int callCount = 0;
+	if (++callCount <= 50)  // 只打印前50次，之后安静运行
+	{
+		char logBuf[128];
+		sprintf_s(logBuf, "[MsgHook] 调用 #%d | rdx=0x%p", callCount, rdx);
+		WriteLog(logBuf);
+	}
+
+	// ==================== 在这里添加你的业务逻辑 ====================
+	// 示例：尝试安全读取消息关键字段（使用指针检查）
+	uintptr_t pMsg = (uintptr_t)rdx;
+
+	// 你可以在这里逐步添加读取逻辑，例如：
+	// if (IsValidPointer((void*)(pMsg + 0x偏移)))
+	//     ReadMessageContent(pMsg);
+
+	// 防撤回示例（后续可扩展）：
+	// if (IsRevokeMessage(pMsg))
+	// {
+	//     WriteLog("检测到撤回消息！");
+	//     // 在这里做防撤回处理
+	// }
+
+//CallOriginal:
+//	// 必须调用原函数
+//	if (pOriginalMsgProcess != nullptr)
+//		return pOriginalMsgProcess(rcx, rdx, r8);
+//
+//	return 0;
+}
+// Hook 函数
+int __fastcall HookedMsgProcess11(void* rcx, void* rdx, void* r8)
+{
+	// rcx = this/context
+	// rdx = 消息数据结构指针（关键）
+	// r8  = 其他参数
+
+	//__try
+	{
+		// 这里可以做你想要的操作，例如：
+		// 1. 打印消息内容
+		// 2. 拦截撤回消息
+		// 3. 记录聊天记录等
+
+		// 示例：尝试读取部分关键字段（需根据实际偏移调整）
+		if (rdx)
+		{
+			// 你可以在这里进一步解析 rdx 指向的结构
+			WriteLog("MsgProcess 被调用！rcx=" +
+				std::to_string((uintptr_t)rcx) +
+				" rdx=" + std::to_string((uintptr_t)rdx));
+		}
+	}
+	//__except (EXCEPTION_EXECUTE_HANDLER)
+	//{
+	//	WriteLog("HookedMsgProcess 发生异常");
+	//}
+
+	// 调用原函数
+	if (pOriginalMsgProcess)
+		return pOriginalMsgProcess(rcx, rdx, r8);
+
+	return 0;
+}
+
+// ==================== MainThread（替换原有） ====================
+DWORD WINAPI MainThread(LPVOID)
+{
+	g_logPath = []() -> std::string {
+		char p[MAX_PATH]; GetTempPathA(MAX_PATH, p);
+		return  "d:\\wx_msg_hook.log";
+		}();
+
+	HMODULE hWeixin = GetModuleHandleA("Weixin.dll");
+	if (!hWeixin) {
+		WriteLog("ERROR: 未找到 Weixin.dll");
+		return 0;
+	}
+
+	// ==================== 需要修改的 RVA ====================
+	// 当前反汇编地址是运行时地址，下面给出常见版本的 RVA（请自行确认）
+	// 4.1.5.20 左右版本参考值（你需要用 x64dbg 确认当前版本的 RVA）
+	const uintptr_t RVA_MSG_PROCESS = 0x22C9960;   //22C9960 ←←← 根据你的 Weixin.dll 调整
+
+	g_msgFuncAddress.store((uintptr_t)hWeixin + RVA_MSG_PROCESS);
+
+	WriteLog("目标函数地址: 0x" +
+		std::to_string(g_msgFuncAddress.load()));
+
+	if (MH_Initialize() != MH_OK) {
+		WriteLog("ERROR: MinHook 初始化失败");
+		return 0;
+	}
+
+	MH_STATUS status = MH_CreateHook(
+		(LPVOID)g_msgFuncAddress.load(),
+		&HookedMsgProcess,
+		(LPVOID*)&pOriginalMsgProcess
+	);
+
+	if (status != MH_OK) {
+		WriteLog("ERROR: 创建 Hook 失败, code=" + std::to_string(status));
+		MH_Uninitialize();
+		return 0;
+	}
+
+	if (MH_EnableHook((LPVOID)g_msgFuncAddress.load()) != MH_OK) {
+		WriteLog("ERROR: 启用 Hook 失败");
+		MH_RemoveHook((LPVOID)g_msgFuncAddress.load());
+		MH_Uninitialize();
+		return 0;
+	}
+
+	WriteLog("SUCCESS: 消息处理函数 Hook 安装成功！");
+	WriteLog("当前 Hook 地址: 0x" + std::to_string(g_msgFuncAddress.load()));
+
+	return 0;
+}
+
+DWORD WINAPI MainThread111(LPVOID) {
 	g_logPath = []() -> std::string {
 		char p[MAX_PATH]; GetTempPathA(MAX_PATH, p);
 		return std::string(p) + "wx_db_key_.log";
@@ -204,7 +338,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
 	if (message == 1) {
 		
-		PatchRevokeMsg41030(0x21C93A6);
+		
+			PatchRevokeMsg41030(0x22C9BB6);
 		                      
 		return 0;
 	}
@@ -251,7 +386,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
 	if (reason == DLL_PROCESS_ATTACH) {
 		DisableThreadLibraryCalls(hModule);
 		//getDBkey
-		//CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
+		CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
 		//防撤回
 		HANDLE hThread = CreateThread(NULL, 0, MsgWindowThread, NULL, 0, NULL);
 		if (hThread) {

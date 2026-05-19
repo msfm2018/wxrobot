@@ -42,23 +42,6 @@ namespace WpfAppMultiPatch
             public IntPtr lpData;   // 指向数据（在发送端的内存）
         }
 
-        // DLL imports
-        [DllImport("wxstart.dll", CharSet = CharSet.Unicode)]
-        public static extern int StartWeChatAndInject(string dllPath);
-
-        [DllImport("wxstart.dll", CharSet = CharSet.Unicode)]
-        public static extern int InjectToWeChat(uint pid, string dllPath);
-
-        [DllImport("myfilemopen.dll", CharSet = CharSet.Unicode)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-
-        public static extern bool ApplyPatchToFile(
-        [MarshalAs(UnmanagedType.LPWStr)] string dllPath, // wchar_t* 对应 C# 的 string，需要 MarshalAs 指定类型
-         [MarshalAs(UnmanagedType.LPWStr)] string patchData);
-
-        [DllImport("wxstart.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.I1)] // 确保 C++ bool 正确映射
-        public static extern bool InjectDLL(uint pid, string dllPath);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
@@ -75,8 +58,6 @@ namespace WpfAppMultiPatch
         private const string WeixinSubKey = "Weixin";
         string installPath = "";
         string decodedVersion = "";
-
-
 
 
         public List<ProcessInfo> FindAllProcessIdsByWindowTitle(string windowTitle)
@@ -230,41 +211,6 @@ namespace WpfAppMultiPatch
 
 
 
-        public void TryFilePatchWeChatDll(string wxVersionStr, string patchData)
-        {
-
-            if (string.IsNullOrWhiteSpace(wxVersionStr) || string.IsNullOrWhiteSpace(installPath))
-            {
-                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string dllPath = $@"{installPath}\{wxVersionStr}\Weixin.dll";
-
-            if (!File.Exists(dllPath))
-            {
-                MessageBox.Show($"未找到 Weixin.dll 文件：{dllPath}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-
-                if (ApplyPatchToFile(dllPath, patchData))
-                {
-                    MessageBox.Show("补丁应用成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("补丁失败或DLL不兼容。", "失败", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"补丁过程中发生异常：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
 
         private void writePatch()
         {
@@ -297,7 +243,7 @@ namespace WpfAppMultiPatch
                     }
                     else
                     {
-                        InjectToWeChat(info.ProcessId, dllPath);
+                        DllInjector.InjectDLL(info.ProcessId, dllPath);
                         Thread.Sleep(500); // 等待注入完成
                         string className = "RevokePatchMsgWnd";
                         IntPtr childWindowHandle = FindWindowEx(info.WindowHandle, IntPtr.Zero, className, null);
@@ -318,29 +264,7 @@ namespace WpfAppMultiPatch
             }
         }
 
-        private Dictionary<string, PatchInfo>? LoadPatchConfig()
-        {
-            try
-            {
-                string jsonPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "patch_config.json");
-                if (!File.Exists(jsonPath))
-                {
-                    MessageBox.Show("未找到配置文件 patch_config.json", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return null;
-                }
-
-                string jsonContent = File.ReadAllText(jsonPath);
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var config = JsonSerializer.Deserialize<Dictionary<string, PatchInfo>>(jsonContent, options);
-
-                return config;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"读取配置文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
-            }
-        }
+  
 
         
               private void BtnRevoke_Click(object sender, RoutedEventArgs e)
@@ -373,52 +297,6 @@ namespace WpfAppMultiPatch
             return $"{part1}.{part2}.{part3}.{part4}";
         }
 
-        private void BtnMultiInstancePatch41_Click(object sender, RoutedEventArgs e)
-        {
-            string decodedVersion;
-            var wxVersionStr = GetValue(WeixinSubKey, "Version");
-            installPath = GetValue(WeixinSubKey, "InstallPath");
-
-            if (string.IsNullOrWhiteSpace(wxVersionStr))
-            {
-                MessageBox.Show("未找到 Weixin 版本或安装路径，请确保微信已安装。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (!uint.TryParse(wxVersionStr, out uint encodedVersion))
-            {
-                MessageBox.Show("版本号格式无效，无法解析。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-
-            try
-            {
-                decodedVersion = encodedVersion.ToString("X8");
-                decodedVersion = HexToVersion(decodedVersion);
-
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"版本解码失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-
-            var config = LoadPatchConfig();
-            if (config == null)
-                return;
-
-            if (!config.TryGetValue(decodedVersion, out PatchInfo? patchInfo) || patchInfo == null)
-            {
-                MessageBox.Show($"未在配置中找到版本 {decodedVersion} 的补丁信息。", "版本不支持", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-
-            TryFilePatchWeChatDll(decodedVersion, patchInfo.position);
-        }
 
 
     }

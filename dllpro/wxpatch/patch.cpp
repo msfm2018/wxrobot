@@ -339,7 +339,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	if (message == 1) {
 		
 		
-			PatchRevokeMsg41030(0x22C9BB6);
+			PatchRevokeMsg41030(0x22D0A16);
 		                      
 		return 0;
 	}

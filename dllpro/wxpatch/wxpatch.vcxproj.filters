@@ -15,55 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="patch.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="fun.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\buffer.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hook.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\trampoline.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hde\hde32.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="minhook\src\hde\hde64.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="fun.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mopen.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\buffer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\trampoline.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\hde\hde32.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\hde\hde64.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\hde\pstdint.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\hde\table32.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="minhook\src\hde\table64.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
+  
   </ItemGroup>
 </Project>

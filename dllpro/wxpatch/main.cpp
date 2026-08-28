@@ -43,8 +43,8 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
 	if (message == 1) {
-		PatchRevokeMsg(0x23D7277);
-
+		PatchRevokeMsg(0x23D97E7);
+		
 		return 0;
 	}
 

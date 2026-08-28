@@ -20,8 +20,7 @@
 
 #  
 - 一个版本一个提交，下载对应版本即可  
-- **仅作为学习用途**  
-Key 获取灵感来源于 [ycccccccy/wx_key](https://github.com/ycccccccy/wx_key)，感谢作者！
+
 
 
 

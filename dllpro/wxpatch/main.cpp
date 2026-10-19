@@ -9,8 +9,8 @@
 HWND g_hMsgWnd = NULL;
 
 void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
-	// ½« HMODULE ×ª»»Îª DWORD_PTR ÒÔ¼æÈİ64Î»µØÖ· revokemsg
-	HMODULE hMod = GetModuleHandle(L"Weixin.dll"); // GetModuleHandle ·µ»Ø HMODULE£¬ÔÚ64Î»ÏÂÊÇ64Î»µÄ
+	// å°† HMODULE è½¬æ¢ä¸º DWORD_PTR ä»¥å…¼å®¹64ä½åœ°å€ revokemsg
+	HMODULE hMod = GetModuleHandle(L"Weixin.dll"); // GetModuleHandle è¿”å› HMODULEï¼Œåœ¨64ä½ä¸‹æ˜¯64ä½çš„
 	if (!hMod) {
 		MessageBoxA(NULL, "Failed to get module handle for Weixin.dll", "Patch Error", MB_OK | MB_ICONERROR);
 		return;
@@ -22,7 +22,7 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
 	 BYTE patch[] = { 0xB0, 0x01, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3
 	//BYTE patch[] = { 0xB0, 0x00, 0x90, 0x90, 0x90 }; // MOV AL, 0; NOP x3
 
-	// ĞŞ¸ÄÄÚ´æ±£»¤
+	// ä¿®æ”¹å†…å­˜ä¿æŠ¤
 	DWORD oldProtect;
 	if (VirtualProtect((LPVOID)patchAddr, sizeof(patch), PAGE_EXECUTE_READWRITE, &oldProtect)) {
 		memcpy((void*)patchAddr, patch, sizeof(patch));
@@ -31,9 +31,9 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
 
 	}
 	else {
-		// »ñÈ¡´íÎó´úÂë
+		// è·å–é”™è¯¯ä»£ç 
 		DWORD dwError = GetLastError();
-		char szErrorMsg[512]; // Ôö´ó»º³åÇøÒÔÈİÄÉ64Î»µØÖ·µÄÊ®Áù½øÖÆ±íÊ¾
+		char szErrorMsg[512]; // å¢å¤§ç¼“å†²åŒºä»¥å®¹çº³64ä½åœ°å€çš„åå…­è¿›åˆ¶è¡¨ç¤º
 		sprintf_s(szErrorMsg, sizeof(szErrorMsg),
 			"Failed to change memory protection!\nError Code: %lu\nWeixin.dll Base: 0x%llX\nCalculated Patch Address: 0x%llX\nOffset: 0x%llX",
 			dwError, (ULONGLONG)hMod, (ULONGLONG)patchAddr, (ULONGLONG)PATCH_OFFSET);
@@ -43,13 +43,16 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
 	if (message == 1) {
-		PatchRevokeMsg(0x229E9F7);
+    //PatchRevokeMsg(0x229E9F7);
+    PatchRevokeMsg(0x2308F27);
+
+
 		return 0;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
-// ´´½¨Òş²Ø´°¿ÚÓÃÓÚ½ÓÊÕÏûÏ¢
+// åˆ›å»ºéšè—çª—å£ç”¨äºæ¥æ”¶æ¶ˆæ¯
 DWORD WINAPI MsgWindowThread(LPVOID lpParam) {
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = WndProc;
@@ -88,7 +91,7 @@ DWORD WINAPI MsgWindowThread(LPVOID lpParam) {
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
 	if (reason == DLL_PROCESS_ATTACH) {
 		DisableThreadLibraryCalls(hModule);
-		//·À³·»Ø
+		//é˜²æ’¤å›
 		HANDLE hThread = CreateThread(NULL, 0, MsgWindowThread, NULL, 0, NULL);
 		if (hThread) {
 			CloseHandle(hThread);

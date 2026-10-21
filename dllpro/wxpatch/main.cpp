@@ -5,11 +5,11 @@
 #include <sstream>
 #include <iomanip>
 #include <Psapi.h>
+#include <cstdio>
 #include "mopen.h"
 HWND g_hMsgWnd = NULL;
 
 void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
-	// 将 HMODULE 转换为 DWORD_PTR 以兼容64位地址 revokemsg
 	HMODULE hMod = GetModuleHandle(L"Weixin.dll"); // GetModuleHandle 返回 HMODULE，在64位下是64位的
 	if (!hMod) {
 		MessageBoxA(NULL, "Failed to get module handle for Weixin.dll", "Patch Error", MB_OK | MB_ICONERROR);
@@ -30,28 +30,50 @@ void PatchRevokeMsg(ULONG_PTR PATCH_OFFSET) {
 
 
 	}
-	else {
-		// 获取错误代码
-		DWORD dwError = GetLastError();
-		char szErrorMsg[512]; // 增大缓冲区以容纳64位地址的十六进制表示
-		sprintf_s(szErrorMsg, sizeof(szErrorMsg),
-			"Failed to change memory protection!\nError Code: %lu\nWeixin.dll Base: 0x%llX\nCalculated Patch Address: 0x%llX\nOffset: 0x%llX",
-			dwError, (ULONGLONG)hMod, (ULONGLONG)patchAddr, (ULONGLONG)PATCH_OFFSET);
-		MessageBoxA(NULL, szErrorMsg, "Patch Error", MB_OK | MB_ICONERROR);
-	}
+  else {
+    // 获取错误代码
+    DWORD dwError = GetLastError();
+    char szErrorMsg[512]; // 增大缓冲区以容纳64位地址的十六进制表示
+    sprintf_s(szErrorMsg, sizeof(szErrorMsg),
+      "Failed to change memory protection!\nError Code: %lu\nWeixin.dll Base: 0x%llX\nCalculated Patch Address: 0x%llX\nOffset: 0x%llX",
+      dwError, (ULONGLONG)hMod, (ULONGLONG)patchAddr, (ULONGLONG)PATCH_OFFSET);
+
+    OutputDebugStringA(szErrorMsg);
+  }
 }
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-
-	if (message == 1) {
-    //PatchRevokeMsg(0x229E9F7);
-    PatchRevokeMsg(0x2308F27);
 
 
-		return 0;
-	}
 
-	return DefWindowProc(hWnd, message, wParam, lParam);
+
+
+LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+ 
+  if (message == WM_USER + 1)
+  {
+    ULONG_PTR dynamicOffset = static_cast<ULONG_PTR>(lParam);
+
+    WCHAR szMsg[256];
+    swprintf_s(szMsg, _countof(szMsg),
+      L"[RevokePatch] ----: 0x%llX (%llu)\n",
+      static_cast<unsigned long long>(dynamicOffset),
+      static_cast<unsigned long long>(dynamicOffset));
+    OutputDebugStringW(szMsg);
+
+    if (dynamicOffset != 0)
+    {
+      PatchRevokeMsg(dynamicOffset);
+
+    }
+
+    return 0;
+  }
+
+
+  return DefWindowProcW(hWnd, message, wParam, lParam);
 }
+
+
 // 创建隐藏窗口用于接收消息
 DWORD WINAPI MsgWindowThread(LPVOID lpParam) {
 	WNDCLASS wc = { 0 };

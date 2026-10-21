@@ -1,4 +1,4 @@
-﻿using application;
+using application;
 using Microsoft.Win32; // Required for OpenFileDialog
 using MultiWeixin.Assist;
 using System.Collections.Generic;
@@ -45,9 +45,12 @@ namespace WpfAppMultiPatch
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
 
@@ -212,92 +215,138 @@ namespace WpfAppMultiPatch
 
 
 
-        private void writePatch()
+    private void writePatch()
+    {
+      try
+      {
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
+
+        if (!File.Exists(dllPath))
         {
-            try
-            {
-                // 注入 DLL
-                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                string dllPath = System.IO.Path.Combine(baseDirectory ?? "", "wxpatch.dll");
-               
-                if (!File.Exists(dllPath))
-                {
-                    MessageBox.Show($"错误：未找到 wxpatch.dll 于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                var pids = FindAllProcessIdsByWindowTitle("微信");
-                if (pids.Count == 0)
-                {
-                    MessageBox.Show("未找到微信进程。", "错误",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                foreach (var info in pids)
-                {
-                    IntPtr hModule = FindRemoteDll.GetRemoteModuleHandle(info.ProcessId, "wxpatch.dll");
-                    if (hModule != IntPtr.Zero)
-                    {
-                        // 已经注入过
-                        continue;
-                    }
-                    else
-                    {
-                        DllInjector.InjectDLL(info.ProcessId, dllPath);
-                        Thread.Sleep(500); // 等待注入完成
-                        string className = "RevokePatchMsgWnd";
-                        IntPtr childWindowHandle = FindWindowEx(info.WindowHandle, IntPtr.Zero, className, null);
-
-                        PostMessage(childWindowHandle, 1, 0, 0);
-
-                    }
-                }
-
-            }
-            catch (DllNotFoundException)
-            {
-                MessageBox.Show("错误：未找到 wxstart.dll。", "DLL加载错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"启动微信时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+          MessageBox.Show($"错误：未找到 wxpatch.dll 于 {dllPath}", "文件缺失", MessageBoxButton.OK, MessageBoxImage.Error);
+          return;
         }
 
-  
+        // 1. 读取 config.json
+        string configPath = System.IO.Path.Combine(baseDirectory, "config.json");
+        ulong patchOffset=0 ; 
 
-        
-              private void BtnRevoke_Click(object sender, RoutedEventArgs e)
+        if (File.Exists(configPath))
+        {
+          try
+          {
+            string jsonContent = File.ReadAllText(configPath);
+            var patchConfig = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonContent);
+
+            if (patchConfig != null && patchConfig.ContainsKey(decodedVersion))
+            {
+              string hexStr = patchConfig[decodedVersion];
+              if (hexStr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+              {
+                hexStr = hexStr.Substring(2);
+              }
+              patchOffset = Convert.ToUInt64(hexStr, 16);
+              //MessageBox.Show($"{hexStr}, {patchOffset}");
+            }
+            else
+            {
+              MessageBox.Show($"警告：未在 config.json 中找到版本 [{decodedVersion}] 的防撤回偏移量，将使用默认偏移。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+          }
+          catch (Exception ex)
+          {
+            MessageBox.Show($"解析 config.json 失败: {ex.Message}，将使用默认偏移。", "错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+          }
+        }
+        else
+        {
+          MessageBox.Show("警告：未找到 config.json 配置文件，将使用默认偏移。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        var pids = FindAllProcessIdsByWindowTitle("微信");
+        if (pids.Count == 0)
+        {
+          MessageBox.Show("未找到微信进程。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+          return;
+        }
+
+        foreach (var info in pids)
+        {
+          IntPtr hModule = FindRemoteDll.GetRemoteModuleHandle(info.ProcessId, "wxpatch.dll");
+          if (hModule != IntPtr.Zero)
+          {
+            // 已经注入过，也可以选择重新发消息
+            // continue;   // 如果想支持重复发，就注释掉这行
+          }
+          else
+          {
+            DllInjector.InjectDLL(info.ProcessId, dllPath);
+          }
+
+          // 等待消息窗口创建（重要！）
+          IntPtr msgWnd = IntPtr.Zero;
+          for (int i = 0; i < 20; i++)   // 最多等 2 秒
+          {
+            // 全局查找，不要指定父窗口
+            msgWnd = FindWindow("RevokePatchMsgWnd", null);
+
+            if (msgWnd != IntPtr.Zero)
+              break;
+
+            Thread.Sleep(100);
+          }
+
+          if (msgWnd == IntPtr.Zero)
+          {
+            MessageBox.Show($"未找到消息窗口，进程ID: {info.ProcessId}", "错误");
+            continue;
+          }
+
+          // 发送自定义消息
+          uint WM_PATCH_ACTION = 0x0400 + 1;   // WM_USER + 1
+          PostMessage(msgWnd, WM_PATCH_ACTION, IntPtr.Zero, (IntPtr)patchOffset);
+        }
+
+
+
+      }
+      catch (Exception ex)
+      {
+        MessageBox.Show($"打补丁时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
+    }
+
+
+
+
+    private void BtnRevoke_Click(object sender, RoutedEventArgs e)
         {
 
             writePatch();
             MessageBox.Show("补丁已打，正常登录", "操作提示", MessageBoxButton.OK, MessageBoxImage.Information);
 
         }
-      
-
-        static string HexToVersion(string hex)
-        {
-            if (string.IsNullOrWhiteSpace(hex) || hex.Length < 5)
-                throw new ArgumentException("输入的十六进制字符串无效");
-
-            // 取出最后5个字符，例如 f2541113 → 41113
-            string tail = hex.Substring(hex.Length - 5);
-
-            // 拆分 4 | 1 | 1 | 13
-            string part1 = tail.Substring(0, 1);
-            string part2 = tail.Substring(1, 1);
-            string part3 = tail.Substring(2, 1);
-            string part4Hex = tail.Substring(3); // 最后两位是十六进制
-
-            // 把最后两位转成十进制
-            int part4 = Convert.ToInt32(part4Hex, 16);
-
-            // 拼成版本号
-            return $"{part1}.{part2}.{part3}.{part4}";
-        }
 
 
+    static string HexToVersion(string hex)
+    {
+      if (string.IsNullOrWhiteSpace(hex) || hex.Length < 5)
+        throw new ArgumentException("输入的十六进制字符串无效");
 
+      // 取出最后5个字符
+      string tail = hex.Substring(hex.Length - 5);
+
+      // 每一位都当作十六进制解析并转为十进制数字
+      int part1 = Convert.ToInt32(tail.Substring(0, 1), 16);
+      int part2 = Convert.ToInt32(tail.Substring(1, 1), 16);
+      int part3 = Convert.ToInt32(tail.Substring(2, 1), 16);
+      int part4 = Convert.ToInt32(tail.Substring(3), 16); // 最后两位转十进制
+
+      // 拼接成全十进制的版本号（例如：4.1.15.83）
+      return $"{part1}.{part2}.{part3}.{part4}";
     }
+
+
+  }
 }
